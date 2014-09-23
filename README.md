@@ -1,4 +1,4 @@
 Butter.js
 =========
 
-Stay tuned!
+Stay tuned! Work in progress...
