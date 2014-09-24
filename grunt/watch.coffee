@@ -2,8 +2,8 @@ module.exports =
   options:
   	livereload: true
   js:
-    files: ['*.js']
-    tasks: ['jshint']
+    files: ['src/*.js']
+    tasks: ['jshint','build']
   css:
     files: ['demos/assets/scss/**/*.scss']
     tasks: ['compass']

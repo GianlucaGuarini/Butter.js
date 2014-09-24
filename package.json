@@ -53,9 +53,7 @@
   },
   "homepage": "https://github.com/GianlucaGuarini/Butter.js",
   "dependencies": {
-    "bacon": "0.0.1",
-    "bacon.model": "^0.1.11",
-    "jquery": "^2.1.1",
-    "lodash": "^2.4.1"
+    "baconjs": "^0.7.22",
+    "jquery": "^2.1.1"
   }
 }

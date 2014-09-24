@@ -5,9 +5,11 @@ amdclean = require('amdclean');
 module.exports = (grunt, options) =>
 
   # the main file without .js
-  mainFile = 'main';
+  mainFile = 'Butter';
   # Get the script intro and outro strings
-  startFrag = fs.readFileSync('src/frag/start.frag','utf8').replace(/@SCRIPT/g, options.pkg.name)
+  startFrag = fs.readFileSync('src/frag/start.frag','utf8')
+                .replace(/@SCRIPT/g, options.pkg.name)
+                .replace(/@VERSION/g, options.pkg.version)
   endFrag = fs.readFileSync('src/frag/end.frag','utf8')
   # wrap all the js files in a define function to enable the commonjs import/export pattern
   # the requirejs optimizer needs the define functions to find and inject the nested dependecies
@@ -34,8 +36,6 @@ module.exports = (grunt, options) =>
       # check the options https://github.com/gfranko/amdclean
       fs.writeFileSync outputFile, amdclean.clean(
         code: fs.readFileSync(outputFile)
-        prefixTransform: (moduleName) ->
-          moduleName.replace('_index','')
         # wrap the output in a UMD (Universal Module Definition) pattern
         wrap:
           start: startFrag
