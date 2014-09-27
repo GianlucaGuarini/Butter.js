@@ -42,17 +42,20 @@
     }),
       model = view.model;
     view.state.log();
-    model.listen('value').log();
+    model.listen('value.0.name').log();
     model.changes.onEnd(function(){
       console.log('bye');
     });
     view.render();
-    for (var i = 0; i < 30; i++) {
-      model.set({
-        value: i + 'A'
-      });
-    }
-    //console.log(model.changes);
+    model.set({
+      value: [{
+        name: 'gian'
+      },{
+        name: 'ale'
+      }]
+    });
+
+    console.log(model.changes);
 
     //view.onPointerMove.log();
     //view.onPointerDown.log();

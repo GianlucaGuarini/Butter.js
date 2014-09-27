@@ -54,9 +54,13 @@ Butter.Model = function(data) {
 
     var _attributes = this.get();
 
-    Butter.helpers.each(attributes, function(key, value) {
-      _attributes[key] = value;
-    });
+    if (Butter.helpers.isString(attributes) && arguments[1]) {
+      Butter.helpers.changeValueByPath(attributes, arguments[1]);
+    } else {
+      Butter.helpers.each(attributes, function(key, value) {
+        _attributes[key] = value;
+      });
+    }
 
     this.update(_attributes, 'set');
 
@@ -97,7 +101,6 @@ Butter.Model = function(data) {
       if (this.state.length > this.defaults.stateMaxLength + 1) {
         this.state.shift();
       }
-
       _currentStateIndex = this.state.length - 1;
 
     }
@@ -112,28 +115,26 @@ Butter.Model = function(data) {
   /**
    * @public
    */
-  this.changeToState = function(index) {
+  this.changeToState = function(index, method) {
     if (this.state[index]) {
       _currentStateIndex = index;
-      this.update(this.state[index].attributes, 'stateUpdate');
+      this.update(this.state[index].attributes, method);
     }
   };
   /**
    * @public
    */
   this.undo = function() {
-    console.log(_currentStateIndex);
     if (_currentStateIndex > 0) {
-      this.changeToState(--_currentStateIndex);
+      this.changeToState(--_currentStateIndex, 'undo');
     }
   };
   /**
    * @public
    */
   this.redo = function() {
-    console.log(_currentStateIndex);
     if (_currentStateIndex < this.defaults.stateMaxLength) {
-      this.changeToState(++_currentStateIndex);
+      this.changeToState(++_currentStateIndex, 'redo');
     }
   };
   /**

@@ -7,22 +7,31 @@ Butter.binders = {
    * To bind the text of any html element to the view data
    * [data-text] binder
    */
-  'text': {
-    set: function(value) {
-      this.$el.text(value);
-    }
+  'text': function($el, model, path) {
+    return {
+      set: function(value) {
+        model
+          .listen(path)
+          .onValue($el, 'text');
+      }
+    };
   },
   /**
    * To bind the value of any text input
    * [data-val] binder
    */
-  'val': {
-    events: 'change',
-    get: function() {
-      return this.$el.val();
-    },
-    set: function(value) {
-      this.$el.val(value);
-    }
+  'val': function($el, model, path) {
+    return {
+      events: function() {
+        var changes = $el.asEventStream('change');
+        //model.changes.plug(changes.map())
+      },
+      get: function() {
+        return $el.val();
+      },
+      set: function(value) {
+        $el.val(value);
+      }
+    };
   }
 };
