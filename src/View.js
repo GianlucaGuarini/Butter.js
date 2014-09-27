@@ -1,60 +1,68 @@
 /**
- * @module View
+ * @module Butter.View
  */
-
-module.exports = function(options) {
+Butter.View = function(options) {
   /**
-   * Private stuff
+   * Initialize this class with the options passed to it
    * @private
    */
-  var self = this,
-    exec = function(callback) {
-      if (typeof self[callback] === 'function') {
-        self[callback].apply(self, arguments);
-      }
-    };
+  this._constructor = function() {
 
-  /**
-   * Public properties
-   * @public
-   */
-  this.bindings = [];
-  this.views = [];
-  // Special property representing the state of the current view
-  this.state = new Bacon.Bus();
+    Butter.helpers.extend(true, this, Butter.mixins);
+
+    this.bindings = [];
+    this.views = [];
+    this.template = options.template;
+    this.destroyModelOnRemove = false;
+    // Special property representing the state of the current view
+    this.state = new Bacon.Bus();
+
+    this.defaults = Butter.defaults.view;
+
+    // Extend this view with some other custom events passed via options
+    Butter.helpers.each(options, function(key, value) {
+      if (typeof value === 'function') {
+        this[key] = value;
+      } else if (key === 'model') {
+        if (value instanceof Butter.Model) {
+          this[key] = value;
+        } else {
+          this[key] = new Butter.Model(value);
+          if (this.destroyModelsCreated) {
+            this.destroyModelOnRemove = true;
+          }
+        }
+      }
+    }, this);
+
+    if (options.el) {
+      this.setElement(options.el);
+    }
+
+    this.state.onValue(Butter.helpers.bind(this.exec, this));
+
+    return this;
+  };
 
   /**
    * Borrowed from Backbone
-   * @private
+   * @public
    */
-  this._setElement = function() {
-    this.$el = options.el instanceof $ ? options.el : $(options.el);
+  this.setElement = function(el) {
+    this.$el = el instanceof Butter.helpers.$ ? options.el : Butter.helpers.$(el);
     this.el = this.$el[0];
     if (!this.el) {
       console.warn(options.el + 'was not found!');
     }
     return this;
   };
+
   /**
-   * Initialize this class with the options passed to it
-   * @private
+   * Select any element in this view
+   * @public
    */
-  this._constructor = function() {
-    // Extend this view with some other custom events passed via options
-
-    for (var key in options) {
-      var option = options[key];
-      if (typeof option === 'function') {
-        this[key] = option;
-      }
-    }
-
-    this._setElement();
-
-    exec('initialize');
-    this.state.onValue(exec);
-
-    return this;
+  this.$ = function(selector) {
+    return Butter.helpers.$(selector, this.$el);
   };
   /**
    * Render the markup and bind the model to the DOM
@@ -63,6 +71,11 @@ module.exports = function(options) {
   this.render = function() {
 
     this.state.push('beforeRender');
+
+    if (this.template) {
+      this.$el.html(this.template);
+    }
+
     this
       .bind()
       .state
@@ -76,12 +89,12 @@ module.exports = function(options) {
    */
   this.unbind = function() {
     this.$el.off();
-    $(options.events).each(function(i, event) {
-      if (self[event.name]) {
-        self[event.name].onValue()();
-        self[event.name] = null;
+    Butter.helpers.each(options.events, function(i, event) {
+      if (this[event.name]) {
+        this[event.name].onValue()();
+        this[event.name] = null;
       }
-    });
+    }, this);
     return this;
   };
 
@@ -91,10 +104,17 @@ module.exports = function(options) {
    */
   this.bind = function() {
     this.unbind();
-    $(options.events).each(function(i, event) {
-      self[event.name] = self.$el.asEventStream(event.type, event.el);
-    });
+    // Bind the view events
+    Butter.helpers.each(options.events, function(i, event) {
+      this[event.name] = this.$el.asEventStream(event.type, event.el);
+    }, this);
+    // Bind the markup binders
+    //Butter.helpers.each(this.$('*', this.$el), this.parse, this);
     return this;
+  };
+
+  this.parse = function(i, el) {
+
   };
   /**
    * Remove this view its subViews and all the events
@@ -102,10 +122,14 @@ module.exports = function(options) {
   this.remove = function() {
     this.state.push('beforeRemove');
     this.state.end();
+    /**
+     *  Destroy the model created with this view because we assume it's not shared with other views
+     */
+    if (this.destroyModelOnRemove) {
+      this.model.destroy();
+    }
     this.$el.remove();
-    $(this).each(function(i, prop) {
-      self[prop] = null;
-    });
+    this.removeProperties();
   };
 
   // init

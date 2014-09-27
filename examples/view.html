@@ -8,6 +8,7 @@
 
   <div id="test">
     <img src="https://lh6.ggpht.com/39_B6yP5j4aXPq6oXgmpWrpoLBbi-uHha_jHhTzkwtzDpUxDEwMRKZFex2bRLbjRe81r_Z0k0xyXmrbgb6PTXOZxFpxtfeB6b38h7G3GIg=s660" />
+    <input type="text" data-value="myVal" />
   </div>
 
   <!-- Vendor -->
@@ -17,7 +18,8 @@
   <script src="../dist/Butter.js"></script>
   <!-- run mocha -->
   <script>
-    var view = new Butter.View({
+    var
+      view = new Butter.View({
       el: '#test',
       events:[{
         type: 'mousemove touchmove',
@@ -28,21 +30,32 @@
         name: 'onPointerDown',
         el: 'img'
       }],
-      initialize: function () {
-        console.log('init');
+      model: new Butter.Model({
+        value: 10
+      }),
+      beforeRender: function() {
+        console.log('beforeRender');
       },
       afterRender: function() {
         console.log('afterRender');
-      },
-      beforeRender: function() {
-        console.log('beforeRender');
       }
+    }),
+      model = view.model;
+    view.state.log();
+    model.listen('value').log();
+    model.changes.onEnd(function(){
+      console.log('bye');
     });
-    var state =  view.state;
-    view.state.onValue(console.log);
     view.render();
-    view.onPointerMove.log();
-    view.onPointerDown.log();
+    for (var i = 0; i < 30; i++) {
+      model.set({
+        value: i + 'A'
+      });
+    }
+    //console.log(model.changes);
+
+    //view.onPointerMove.log();
+    //view.onPointerDown.log();
     //view.remove();
   </script>
   </body>
