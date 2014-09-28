@@ -16,7 +16,6 @@ Butter.View = function(options) {
     this.destroyModelOnRemove = false;
     // Special property representing the state of the current view
     this.state = new Bacon.Bus();
-
     this.defaults = Butter.defaults.view;
 
     // Extend this view with some other custom events passed via options
@@ -132,8 +131,7 @@ Butter.View = function(options) {
     this.removeProperties();
   };
 
-  // init
-  this._constructor();
+  // initialize this class
+  return this._constructor();
 
-  return this;
 };

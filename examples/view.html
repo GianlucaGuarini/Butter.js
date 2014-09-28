@@ -42,16 +42,16 @@
     }),
       model = view.model;
     view.state.log();
-    model.listen('value.0.name').log();
+    model.listen('value.0.name');
     model.changes.onEnd(function(){
       console.log('bye');
     });
     view.render();
     model.set({
       value: [{
-        name: 'gian'
+        name: 'me'
       },{
-        name: 'ale'
+        name: 'you'
       }]
     });
 

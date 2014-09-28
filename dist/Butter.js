@@ -168,6 +168,49 @@
     },
     isString: function(value) {
       return $.type(value) === 'string';
+    },
+    isFunction: function(value) {
+      return $.type(value) === 'function';
+    },
+    getObjectValueByPath: function(obj, path) {
+      var keys, keyLen, i = 0,
+        key,
+        value = obj;
+
+      keys = path && path.split('.');
+      keyLen = keys && keys.length;
+
+      while (i < keyLen && value) {
+        key = keys[i];
+        value = value[key];
+        i++;
+      }
+
+      if (i < keyLen) {
+        value = null;
+      }
+
+      return value;
+    },
+    setObjectValueByPath: function(obj, path, value) {
+      path = path.split('.');
+      for (var i = 0; i < path.length - 1; i++) {
+        if (!obj[path[i]]) {
+          return false;
+        } else {
+          obj = obj[path[i]];
+        }
+      }
+
+      if (value !== null && value !== undefined) {
+        obj[path[i]] = value;
+        return true;
+      } else {
+        obj[path[i]] = null;
+        delete obj[path[i]];
+        return true;
+      }
+
     }
   };
   /**
@@ -178,92 +221,126 @@
      * Private stuff
      * @private
      */
-    var _currentStateIndex = -1;
+    var __currentStateIndex = 0;
 
     /**
      * @private
      */
     this._constructor = function() {
-
+      // extend this class with the default mixins used for any Butter class
       Butter.helpers.extend(true, this, Butter.mixins);
 
+      // this array will contain all the data changes of this model
+      // its max length is specified in the Butter.defaults.model
       this.state = [];
+      // getting some useful options shared on any model class
       this.defaults = Butter.defaults.model;
-
+      // creating the changes stream that could be listened from the outside
       this.changes = new Bacon.Bus();
+      // other stream that could be listened to check all the events triggered by this model
+      this.events = new Bacon.Bus();
+      // set the initial data
       if (Butter.helpers.isObject(data)) {
         this.set(data);
       }
+      return this;
     };
     /**
+     * Return this model data as valid string
      * @public
      */
     this.toString = function() {
       return JSON.stringify(this.get());
     };
     /**
+     * Get any value of the model by a path
+     * If no path is specified we get all the model attributes
+     * @param { String } path: the path to the model attribute
      * @public
      */
-    this.get = function(attribute) {
-      var currentState = this.state[_currentStateIndex],
-        attributes;
+    this.get = function(path) {
+      var currentState = this.state[__currentStateIndex];
+      // check if this model has been set at least once
+      // by checking its current state
       if (!currentState) {
         return {};
-      }
-
-      attributes = Butter.helpers.extend(true, {}, currentState.attributes);
-
-      if (Butter.helpers.isString(attribute) && attributes[attribute]) {
-        return attributes[attribute];
-      } else if (!attribute) {
-        return attributes;
-      }
-    };
-    /**
-     * @public
-     */
-    this.set = function(attributes) {
-
-      var _attributes = this.get();
-
-      if (Butter.helpers.isString(attributes) && arguments[1]) {
-        Butter.helpers.changeValueByPath(attributes, arguments[1]);
+      } else if (Butter.helpers.isString(path)) {
+        // get an internal property of this model
+        return Butter.helpers.getObjectValueByPath(currentState.attributes, path);
       } else {
-        Butter.helpers.each(attributes, function(key, value) {
-          _attributes[key] = value;
-        });
+        // return the all model attributes by cloning them in a new object
+        return Butter.helpers.extend(true, {}, currentState.attributes);
       }
-
-      this.update(_attributes, 'set');
-
       return this;
     };
     /**
+     * Set/Update the data managed by this model
+     * selecting a deep property or just using an object
+     * @param { Object|String } : path to a deep value to update or object to set/update
+     * @param { * } : in case of a path for a deep update here you can set the new property
      * @public
      */
-    this.unset = function(attributes) {
+    this.set = function() {
 
-      var _attributes = this.get();
+      // get all the current model attributes
+      var attributes = this.get(),
+        // assuming we don't need to update this
+        mustUpdate = false;
 
-      Butter.helpers.each(attributes, function(key, value) {
-        if (this.attributes[key]) {
-          _attributes[key] = null;
-          delete _attributes[key];
-        }
-      }, this);
+      // do we need to update a deep property?
+      if (Butter.helpers.isString(arguments[0])) {
+        // update the deep value or return false
+        mustUpdate = Butter.helpers.setObjectValueByPath(attributes, arguments[0], arguments[1]);
+      } else {
+        // update or add new values
+        Butter.helpers.each(arguments[0], function(key, value) {
+          attributes[key] = value;
+        });
+        mustUpdate = true;
+      }
 
-      this.update(_attributes, 'unset');
+      // trigger the update function only if it's really needed
+      if (mustUpdate) {
+        this.update(attributes, 'set');
+      }
 
       return this;
     };
     /**
+     * Remove any property from the current model
+     * @param { String } path: path to the value to remove
+     * @public
+     */
+    this.unset = function(path) {
+
+      var attributes = this.get();
+      // update only if the nested property has been found
+      if (path && Butter.helpers.setObjectValueByPath(attributes, path, null)) {
+        this.update(attributes, 'unset');
+      }
+
+      return this;
+    };
+    /**
+     * Reset th
+     * @return {[type]} [description]
+     */
+    this.reset = function() {
+      this.update({}, 'reset');
+
+      return this;
+    };
+    /**
+     * Update this model attributes
+     * @param { Object } attributes: new data to set
      * @public
      */
     this.update = function(attributes, method) {
 
       this.changes.push(attributes);
+      this.events.push(method);
 
-      if (~Butter.helpers.indexOf(method, ['set', 'unset'])) {
+      if (~Butter.helpers.indexOf(method, ['set', 'unset', 'reset'])) {
 
         this.state.push({
           method: method,
@@ -273,7 +350,7 @@
         if (this.state.length > this.defaults.stateMaxLength + 1) {
           this.state.shift();
         }
-        _currentStateIndex = this.state.length - 1;
+        __currentStateIndex = this.state.length - 1;
 
       }
 
@@ -289,7 +366,7 @@
      */
     this.changeToState = function(index, method) {
       if (this.state[index]) {
-        _currentStateIndex = index;
+        __currentStateIndex = index;
         this.update(this.state[index].attributes, method);
       }
     };
@@ -297,16 +374,16 @@
      * @public
      */
     this.undo = function() {
-      if (_currentStateIndex > 0) {
-        this.changeToState(--_currentStateIndex, 'undo');
+      if (__currentStateIndex > 0) {
+        this.changeToState(--__currentStateIndex, 'undo');
       }
     };
     /**
      * @public
      */
     this.redo = function() {
-      if (_currentStateIndex < this.defaults.stateMaxLength) {
-        this.changeToState(++_currentStateIndex, 'redo');
+      if (__currentStateIndex < this.defaults.stateMaxLength) {
+        this.changeToState(++__currentStateIndex, 'redo');
       }
     };
     /**
@@ -314,12 +391,13 @@
      */
     this.destroy = function() {
       this.changes.end();
+      this.events.end();
       this.removeProperties();
     };
 
-    this._constructor();
+    // initialize this class
+    return this._constructor();
 
-    return this;
   };
   /**
    * @module Butter.View
@@ -339,7 +417,6 @@
       this.destroyModelOnRemove = false;
       // Special property representing the state of the current view
       this.state = new Bacon.Bus();
-
       this.defaults = Butter.defaults.view;
 
       // Extend this view with some other custom events passed via options
@@ -455,10 +532,9 @@
       this.removeProperties();
     };
 
-    // init
-    this._constructor();
+    // initialize this class
+    return this._constructor();
 
-    return this;
   };
   return Butter;
 }));
