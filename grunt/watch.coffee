@@ -9,4 +9,4 @@ module.exports =
     tasks: ['compass']
   test:
     files: ['test/**/*']
-    tasks: ['requirejs','mocha']
+    tasks: ['karma']
