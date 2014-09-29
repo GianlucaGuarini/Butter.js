@@ -17,6 +17,9 @@ node_modules
 .DS_Store
 .grunt
 
+# Ignore the tests coverage
+test/coverage
+
 # we don't need to push these files
 # they will be copied by the grunt copy task
 gh-pages/assets/dist
