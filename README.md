@@ -1,4 +1,5 @@
-Butter.js
+![Butter.js logo](https://raw.githubusercontent.com/GianlucaGuarini/Butter.js/master/logos/logo.png)
+Functional Reactive Progamming Javascript Framework
 =========
 
-Stay tuned! Work in progress...
+Work in progress... stay tuned!
