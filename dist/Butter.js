@@ -172,6 +172,9 @@
     isFunction: function(value) {
       return $.type(value) === 'function';
     },
+    isEqual: function(value1, value2) {
+      return JSON.stringify(value1) === JSON.stringify(value2);
+    },
     getObjectValueByPath: function(obj, path) {
       var keys, keyLen, i = 0,
         key,
@@ -221,14 +224,15 @@
      * Private stuff
      * @private
      */
-    var __currentStateIndex = 0;
+    var __currentStateIndex = 0,
+      _ = Butter.helpers;
 
     /**
      * @private
      */
     this._constructor = function() {
       // extend this class with the default mixins used for any Butter class
-      Butter.helpers.extend(true, this, Butter.mixins);
+      _.extend(true, this, Butter.mixins);
 
       // this array will contain all the data changes of this model
       // its max length is specified in the Butter.defaults.model
@@ -240,7 +244,7 @@
       // other stream that could be listened to check all the events triggered by this model
       this.events = new Bacon.Bus();
       // set the initial data
-      if (Butter.helpers.isObject(data)) {
+      if (_.isObject(data)) {
         this.set(data);
       }
       return this;
@@ -264,12 +268,12 @@
       // by checking its current state
       if (!currentState) {
         return {};
-      } else if (Butter.helpers.isString(path)) {
+      } else if (_.isString(path)) {
         // get an internal property of this model
-        return Butter.helpers.getObjectValueByPath(currentState.attributes, path);
+        return _.getObjectValueByPath(currentState.attributes, path);
       } else {
         // return the all model attributes by cloning them in a new object
-        return Butter.helpers.extend(true, {}, currentState.attributes);
+        return _.extend(true, {}, currentState.attributes);
       }
       return this;
     };
@@ -288,12 +292,12 @@
         mustUpdate = false;
 
       // do we need to update a deep property?
-      if (Butter.helpers.isString(arguments[0])) {
+      if (_.isString(arguments[0])) {
         // update the deep value or return false
-        mustUpdate = Butter.helpers.setObjectValueByPath(attributes, arguments[0], arguments[1]);
+        mustUpdate = _.setObjectValueByPath(attributes, arguments[0], arguments[1]);
       } else {
         // update or add new values
-        Butter.helpers.each(arguments[0], function(key, value) {
+        _.each(arguments[0], function(key, value) {
           attributes[key] = value;
         });
         mustUpdate = true;
@@ -315,7 +319,7 @@
 
       var attributes = this.get();
       // update only if the nested property has been found
-      if (path && Butter.helpers.setObjectValueByPath(attributes, path, null)) {
+      if (path && _.setObjectValueByPath(attributes, path, null)) {
         this.update(attributes, 'unset');
       }
 
@@ -340,7 +344,7 @@
       this.changes.push(attributes);
       this.events.push(method);
 
-      if (~Butter.helpers.indexOf(method, ['set', 'unset', 'reset'])) {
+      if (~_.indexOf(method, ['set', 'unset', 'reset'])) {
 
         this.state.push({
           method: method,
@@ -359,7 +363,7 @@
      * @public
      */
     this.listen = function(path) {
-      return this.changes.map('.' + path).skipDuplicates();
+      return this.changes.map('.' + path).skipDuplicates(_.isEqual);
     };
     /**
      * @public
@@ -403,13 +407,15 @@
    * @module Butter.View
    */
   Butter.View = function(options) {
+
+    var _ = Butter.helpers;
     /**
      * Initialize this class with the options passed to it
      * @private
      */
     this._constructor = function() {
 
-      Butter.helpers.extend(true, this, Butter.mixins);
+      _.extend(true, this, Butter.mixins);
 
       this.bindings = [];
       this.views = [];
@@ -420,7 +426,7 @@
       this.defaults = Butter.defaults.view;
 
       // Extend this view with some other custom events passed via options
-      Butter.helpers.each(options, function(key, value) {
+      _.each(options, function(key, value) {
         if (typeof value === 'function') {
           this[key] = value;
         } else if (key === 'model') {
@@ -439,7 +445,7 @@
         this.setElement(options.el);
       }
 
-      this.state.onValue(Butter.helpers.bind(this.exec, this));
+      this.state.onValue(_.bind(this.exec, this));
 
       return this;
     };
@@ -449,7 +455,7 @@
      * @public
      */
     this.setElement = function(el) {
-      this.$el = el instanceof Butter.helpers.$ ? options.el : Butter.helpers.$(el);
+      this.$el = el instanceof _.$ ? options.el : _.$(el);
       this.el = this.$el[0];
       if (!this.el) {
         console.warn(options.el + 'was not found!');
@@ -462,7 +468,7 @@
      * @public
      */
     this.$ = function(selector) {
-      return Butter.helpers.$(selector, this.$el);
+      return _.$(selector, this.$el);
     };
     /**
      * Render the markup and bind the model to the DOM
@@ -489,7 +495,7 @@
      */
     this.unbind = function() {
       this.$el.off();
-      Butter.helpers.each(options.events, function(i, event) {
+      _.each(options.events, function(i, event) {
         if (this[event.name]) {
           this[event.name].onValue()();
           this[event.name] = null;
@@ -505,11 +511,11 @@
     this.bind = function() {
       this.unbind();
       // Bind the view events
-      Butter.helpers.each(options.events, function(i, event) {
+      _.each(options.events, function(i, event) {
         this[event.name] = this.$el.asEventStream(event.type, event.el);
       }, this);
       // Bind the markup binders
-      //Butter.helpers.each(this.$('*', this.$el), this.parse, this);
+      //_.each(this.$('*', this.$el), this.parse, this);
       return this;
     };
 

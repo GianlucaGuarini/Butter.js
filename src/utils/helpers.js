@@ -19,6 +19,9 @@ Butter.helpers = {
   isFunction: function(value) {
     return $.type(value) === 'function';
   },
+  isEqual: function(value1, value2) {
+    return JSON.stringify(value1) === JSON.stringify(value2);
+  },
   getObjectValueByPath: function(obj, path) {
     var keys, keyLen, i = 0,
       key,

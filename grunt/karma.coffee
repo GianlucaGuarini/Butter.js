@@ -37,8 +37,8 @@ module.exports =
       included: false
     }
     {
-      pattern:'node_modules/sinon/lib/sinon.js'
-      included: false
+      pattern:'node_modules/sinon/pkg/sinon.js'
+      included: true
     }
     {
       pattern:'node_modules/sinon-chai/lib/sinon-chai.js'

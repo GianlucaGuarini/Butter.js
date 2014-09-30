@@ -36,7 +36,7 @@
     "mocha": "^1.21.4",
     "requirejs": "^2.1.15",
     "simulant": "^0.1.0",
-    "sinon": "^1.10.2",
+    "sinon": "^1.10.3",
     "sinon-chai": "^2.5.0"
   },
   "author": "Gianluca Guarini (http://gianlucaguarini.com/)",

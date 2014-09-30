@@ -2,13 +2,15 @@
  * @module Butter.View
  */
 Butter.View = function(options) {
+
+  var _ = Butter.helpers;
   /**
    * Initialize this class with the options passed to it
    * @private
    */
   this._constructor = function() {
 
-    Butter.helpers.extend(true, this, Butter.mixins);
+    _.extend(true, this, Butter.mixins);
 
     this.bindings = [];
     this.views = [];
@@ -19,7 +21,7 @@ Butter.View = function(options) {
     this.defaults = Butter.defaults.view;
 
     // Extend this view with some other custom events passed via options
-    Butter.helpers.each(options, function(key, value) {
+    _.each(options, function(key, value) {
       if (typeof value === 'function') {
         this[key] = value;
       } else if (key === 'model') {
@@ -38,7 +40,7 @@ Butter.View = function(options) {
       this.setElement(options.el);
     }
 
-    this.state.onValue(Butter.helpers.bind(this.exec, this));
+    this.state.onValue(_.bind(this.exec, this));
 
     return this;
   };
@@ -48,7 +50,7 @@ Butter.View = function(options) {
    * @public
    */
   this.setElement = function(el) {
-    this.$el = el instanceof Butter.helpers.$ ? options.el : Butter.helpers.$(el);
+    this.$el = el instanceof _.$ ? options.el : _.$(el);
     this.el = this.$el[0];
     if (!this.el) {
       console.warn(options.el + 'was not found!');
@@ -61,7 +63,7 @@ Butter.View = function(options) {
    * @public
    */
   this.$ = function(selector) {
-    return Butter.helpers.$(selector, this.$el);
+    return _.$(selector, this.$el);
   };
   /**
    * Render the markup and bind the model to the DOM
@@ -88,7 +90,7 @@ Butter.View = function(options) {
    */
   this.unbind = function() {
     this.$el.off();
-    Butter.helpers.each(options.events, function(i, event) {
+    _.each(options.events, function(i, event) {
       if (this[event.name]) {
         this[event.name].onValue()();
         this[event.name] = null;
@@ -104,11 +106,11 @@ Butter.View = function(options) {
   this.bind = function() {
     this.unbind();
     // Bind the view events
-    Butter.helpers.each(options.events, function(i, event) {
+    _.each(options.events, function(i, event) {
       this[event.name] = this.$el.asEventStream(event.type, event.el);
     }, this);
     // Bind the markup binders
-    //Butter.helpers.each(this.$('*', this.$el), this.parse, this);
+    //_.each(this.$('*', this.$el), this.parse, this);
     return this;
   };
 
