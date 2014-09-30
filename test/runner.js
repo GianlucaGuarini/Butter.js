@@ -1,7 +1,7 @@
 var karma = window.__karma__;
 
 requirejs.config({
-  baseUrl: karma ? 'base/test/' : './',
+  baseUrl: karma ? 'base/src/' : '../src/',
   paths: {
     'chai': '../node_modules/chai/chai',
     'sinon': '../node_modules/sinon/pkg/sinon',
@@ -31,8 +31,8 @@ if (karma) {
 mocha.setup('bdd');
 
 require([
-  'specs/core.specs',
-  'specs/model.specs'
+  '../test/specs/core.specs',
+  '../test/specs/model.specs'
 ], function() {
 
   var runner;

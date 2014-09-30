@@ -1,13 +1,15 @@
-/**
- * Default Butter default Options
- * @module Butter.defaults
- */
-Butter.defaults = {
-  view: {
-    binderSelector: 'data-',
-    destroyModelsCreated: true
-  },
-  model: {
-    stateMaxLength: 12
-  }
-};
+define(function(require, exports, module) {
+  'use strict';
+  /**
+   * @module Butter.defaults
+   */
+  module.exports = {
+    view: {
+      binderSelector: 'data-',
+      destroyModelsCreated: true
+    },
+    model: {
+      stateMaxLength: 12
+    }
+  };
+});

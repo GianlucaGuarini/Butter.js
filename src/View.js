@@ -1,139 +1,146 @@
-/**
- * @module Butter.View
- */
-Butter.View = function(options) {
-
-  var _ = Butter.helpers;
+define(function(require, exports, module) {
+  'use strict';
   /**
-   * Initialize this class with the options passed to it
-   * @private
+   * @module Butter.View
    */
-  this._constructor = function() {
+  var _ = require('./utils/helpers'),
+    defaults = require('./utils/defaults'),
+    mixins = require('./utils/mixins');
 
-    _.extend(true, this, Butter.mixins);
+  module.exports = function(options) {
 
-    this.bindings = [];
-    this.views = [];
-    this.template = options.template;
-    this.destroyModelOnRemove = false;
-    // Special property representing the state of the current view
-    this.state = new Bacon.Bus();
-    this.defaults = Butter.defaults.view;
 
-    // Extend this view with some other custom events passed via options
-    _.each(options, function(key, value) {
-      if (typeof value === 'function') {
-        this[key] = value;
-      } else if (key === 'model') {
-        if (value instanceof Butter.Model) {
+    /**
+     * Initialize this class with the options passed to it
+     * @private
+     */
+    this._constructor = function() {
+
+      _.extend(true, this, mixins);
+
+      this.bindings = [];
+      this.views = [];
+      this.template = options.template;
+      this.destroyModelOnRemove = false;
+      // Special property representing the state of the current view
+      this.state = new Bacon.Bus();
+      this.defaults = defaults.view;
+
+      // Extend this view with some other custom events passed via options
+      _.each(options, function(key, value) {
+        if (typeof value === 'function') {
           this[key] = value;
-        } else {
-          this[key] = new Butter.Model(value);
-          if (this.destroyModelsCreated) {
-            this.destroyModelOnRemove = true;
+        } else if (key === 'model') {
+          if (value instanceof Butter.Model) {
+            this[key] = value;
+          } else {
+            this[key] = new Butter.Model(value);
+            if (this.destroyModelsCreated) {
+              this.destroyModelOnRemove = true;
+            }
           }
         }
+      }, this);
+
+      if (options.el) {
+        this.setElement(options.el);
       }
-    }, this);
 
-    if (options.el) {
-      this.setElement(options.el);
-    }
+      this.state.onValue(_.bind(this.exec, this));
 
-    this.state.onValue(_.bind(this.exec, this));
+      return this;
+    };
 
-    return this;
-  };
-
-  /**
-   * Borrowed from Backbone
-   * @public
-   */
-  this.setElement = function(el) {
-    this.$el = el instanceof _.$ ? options.el : _.$(el);
-    this.el = this.$el[0];
-    if (!this.el) {
-      console.warn(options.el + 'was not found!');
-    }
-    return this;
-  };
-
-  /**
-   * Select any element in this view
-   * @public
-   */
-  this.$ = function(selector) {
-    return _.$(selector, this.$el);
-  };
-  /**
-   * Render the markup and bind the model to the DOM
-   * @public
-   */
-  this.render = function() {
-
-    this.state.push('beforeRender');
-
-    if (this.template) {
-      this.$el.html(this.template);
-    }
-
-    this
-      .bind()
-      .state
-      .push('afterRender');
-
-    return this;
-  };
-  /**
-   * Remove all the events from the child nodes
-   * @public
-   */
-  this.unbind = function() {
-    this.$el.off();
-    _.each(options.events, function(i, event) {
-      if (this[event.name]) {
-        this[event.name].onValue()();
-        this[event.name] = null;
-      }
-    }, this);
-    return this;
-  };
-
-  /**
-   * Delegate the events streams to the child nodes of this view
-   * @public
-   */
-  this.bind = function() {
-    this.unbind();
-    // Bind the view events
-    _.each(options.events, function(i, event) {
-      this[event.name] = this.$el.asEventStream(event.type, event.el);
-    }, this);
-    // Bind the markup binders
-    //_.each(this.$('*', this.$el), this.parse, this);
-    return this;
-  };
-
-  this.parse = function(i, el) {
-
-  };
-  /**
-   * Remove this view its subViews and all the events
-   */
-  this.remove = function() {
-    this.state.push('beforeRemove');
-    this.state.end();
     /**
-     *  Destroy the model created with this view because we assume it's not shared with other views
+     * Borrowed from Backbone
+     * @public
      */
-    if (this.destroyModelOnRemove) {
-      this.model.destroy();
-    }
-    this.$el.remove();
-    this.removeProperties();
+    this.setElement = function(el) {
+      this.$el = el instanceof _.$ ? options.el : _.$(el);
+      this.el = this.$el[0];
+      if (!this.el) {
+        console.warn(options.el + 'was not found!');
+      }
+      return this;
+    };
+
+    /**
+     * Select any element in this view
+     * @public
+     */
+    this.$ = function(selector) {
+      return _.$(selector, this.$el);
+    };
+    /**
+     * Render the markup and bind the model to the DOM
+     * @public
+     */
+    this.render = function() {
+
+      this.state.push('beforeRender');
+
+      if (this.template) {
+        this.$el.html(this.template);
+      }
+
+      this
+        .bind()
+        .state
+        .push('afterRender');
+
+      return this;
+    };
+    /**
+     * Remove all the events from the child nodes
+     * @public
+     */
+    this.unbind = function() {
+      this.$el.off();
+      _.each(options.events, function(i, event) {
+        if (this[event.name]) {
+          this[event.name].onValue()();
+          this[event.name] = null;
+        }
+      }, this);
+      return this;
+    };
+
+    /**
+     * Delegate the events streams to the child nodes of this view
+     * @public
+     */
+    this.bind = function() {
+      this.unbind();
+      // Bind the view events
+      _.each(options.events, function(i, event) {
+        this[event.name] = this.$el.asEventStream(event.type, event.el);
+      }, this);
+      // Bind the markup binders
+      //_.each(this.$('*', this.$el), this.parse, this);
+      return this;
+    };
+
+    this.parse = function(i, el) {
+
+    };
+    /**
+     * Remove this view its subViews and all the events
+     */
+    this.remove = function() {
+      this.state.push('beforeRemove');
+      this.state.end();
+      /**
+       *  Destroy the model created with this view because we assume it's not shared with other views
+       */
+      if (this.destroyModelOnRemove) {
+        this.model.destroy();
+      }
+      this.$el.remove();
+      this.removeProperties();
+    };
+
+    // initialize this class
+    return this._constructor();
+
   };
-
-  // initialize this class
-  return this._constructor();
-
-};
+});

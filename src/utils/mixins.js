@@ -1,31 +1,34 @@
-/**
- * Some useful mixins
- * @module Butter.mixins
- */
-Butter.mixins = {
+define(function(require, exports, module) {
+  'use strict';
+  var _ = require('../utils/helpers');
   /**
-   * Extend the current class with adding other methods
-   * @public
+   * @module Butter.mixins
    */
-  extend: function(properties) {
-    return Butter.helpers.extend(true, this, properties);
-  },
-  /**
-   * Executes any method of the current class only if it exists
-   * @public
-   */
-  exec: function(callback) {
-    if (typeof this[callback] === 'function') {
-      this[callback].apply(this, arguments);
+  module.exports = {
+    /**
+     * Extend the current class with adding other methods
+     * @public
+     */
+    extend: function(properties) {
+      return _.extend(true, this, properties);
+    },
+    /**
+     * Executes any method of the current class only if it exists
+     * @public
+     */
+    exec: function(callback) {
+      if (typeof this[callback] === 'function') {
+        this[callback].apply(this, arguments);
+      }
+    },
+    /**
+     * Remove all the class properties
+     */
+    removeProperties: function() {
+      _.each(this, function(i, property) {
+        this[property] = null;
+        delete this[property];
+      }, this);
     }
-  },
-  /**
-   * Remove all the class properties
-   */
-  removeProperties: function() {
-    Butter.helpers.each(this, function(i, property) {
-      this[property] = null;
-      delete this[property];
-    }, this);
-  }
-};
+  };
+});

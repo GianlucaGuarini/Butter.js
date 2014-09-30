@@ -1,5 +1,5 @@
 define(function(require) {
-  var Butter = require('butter'),
+  var Model = require('Model'),
     chai = require('chai'),
     should = chai.should,
     expect = chai.expect,
@@ -10,7 +10,7 @@ define(function(require) {
   describe('Model creation get, set, reset, and unset methods', function() {
     var food;
     beforeEach(function() {
-      food = new Butter.Model({
+      food = new Model({
         tomatoes: 'myTomatoes',
         spices: {
           pepper: 'foo',
@@ -25,7 +25,6 @@ define(function(require) {
       expect(food.state).to.be.an('array');
       expect(food.changes).is.instanceof(Bacon.Bus);
       expect(food.events).is.instanceof(Bacon.Bus);
-      expect(food).is.instanceof(Butter.Model);
 
       // get
       expect(food.get('tomatoes')).to.be.equal('myTomatoes');

@@ -7,4 +7,4 @@ define(function(require) {
       expect(Butter).is.not.undefined;
     });
   });
-})
+});

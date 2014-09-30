@@ -7,7 +7,7 @@ module.exports =
     captureConsole: true
     browsers: ['PhantomJS']
     preprocessors:
-      'dist/Butter.js':'coverage'
+      'src/**/*.js':'coverage'
 
     coverageReporter:
       type: 'lcov'
@@ -58,6 +58,10 @@ module.exports =
     }
     {
       pattern:'dist/**/*.js'
+      included: false
+    }
+    {
+      pattern:'src/**/*.js'
       included: false
     }
     {
