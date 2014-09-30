@@ -8,8 +8,6 @@ branches:
 
 before_script:
     - npm install grunt-cli -g
-    - npm install bower -g
-    - bower install
 
 notifications:
     email: false
