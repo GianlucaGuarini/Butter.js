@@ -4,7 +4,7 @@
   "description": "The reactive programming framework that will make your code tastier",
   "main": "index.js",
   "scripts": {
-    "test": "grunt test"
+    "test": "grunt karma:run"
   },
   "keywords": [
     "reactive programming",
