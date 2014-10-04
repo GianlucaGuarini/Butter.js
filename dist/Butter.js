@@ -65,12 +65,9 @@
     root.Butter = factory(Bacon, jQuery);
   }
 }(this, function(Bacon, $) {
-  var utils_helpers, utils_defaults, utils_mixins, utils_binders, Model, View, Butter;
-  utils_helpers = function(exports) {
+  var utils_helpers, utils_defaults, utils_mixins, utils_binders, Model, View, Butter, exports;
+  utils_helpers = exports = function(exports) {
 
-    /**
-     * @module Butter.helpers
-     */
     exports = {
       $: $,
       extend: $.extend,
@@ -87,6 +84,9 @@
       },
       isFunction: function(value) {
         return $.type(value) === 'function';
+      },
+      isUndefined: function(value) {
+        return $.type(value) === 'undefined';
       },
       isEqual: function(value1, value2) {
         return JSON.stringify(value1) === JSON.stringify(value2);
@@ -138,7 +138,7 @@
         destroyModelsCreated: true
       },
       model: {
-        stateMaxLength: 12
+        maxStatesLength: 10
       }
     };
     return exports;
@@ -198,18 +198,26 @@
     var _ = utils_helpers,
       defaults = utils_defaults,
       mixins = utils_mixins;
-    exports = function(data) {
-      var __currentStateIndex = 0;
+    exports = function(initialData) {
+      var __currentStateIndex = 0,
+        __initialData = {};
       this._constructor = function() {
         _.extend(true, this, mixins);
+        _.extend(true, this, defaults.model);
         this.state = [];
-        this.defaults = defaults.model;
         this.changes = new Bacon.Bus();
         this.events = new Bacon.Bus();
-        if (_.isObject(data)) {
-          this.set(data);
+        if (_.isObject(initialData)) {
+          this.set(initialData);
+          __initialData = this.get();
         }
         return this;
+      };
+      this._changeToState = function(index, method) {
+        if (this.state[index]) {
+          __currentStateIndex = index;
+          this.update(this.state[index].attributes, method);
+        }
       };
       this.toString = function() {
         return JSON.stringify(this.get());
@@ -223,7 +231,6 @@
         } else {
           return _.extend(true, {}, currentState.attributes);
         }
-        return this;
       };
       this.set = function() {
         var attributes = this.get(),
@@ -249,7 +256,7 @@
         return this;
       };
       this.reset = function() {
-        this.update({}, 'reset');
+        this.update(__initialData, 'reset');
         return this;
       };
       this.update = function(attributes, method) {
@@ -264,29 +271,41 @@
             method: method,
             attributes: attributes
           });
-          if (this.state.length > this.defaults.stateMaxLength + 1) {
+          if (this.state.length > this.maxStatesLength + 1) {
             this.state.shift();
           }
           __currentStateIndex = this.state.length - 1;
         }
       };
+      this.bind = function(destination, sourcePath, destinationPath, doubleWay) {
+        var _doubleWay = _.isUndefined(doubleWay) ? true : doubleWay;
+        var updateModel = function(value) {
+          if (destinationPath) {
+            destination.set(destinationPath, value);
+          } else {
+            destination.set(value);
+          }
+        };
+        if (sourcePath) {
+          this.listen(sourcePath).onValue(updateModel);
+        } else {
+          this.changes.skipDuplicates(_.isEqual).onValue(updateModel);
+        }
+        if (_doubleWay) {
+          destination.bind(this, destinationPath, sourcePath, false);
+        }
+      };
       this.listen = function(path) {
         return this.changes.map('.' + path).skipDuplicates(_.isEqual);
       };
-      this.changeToState = function(index, method) {
-        if (this.state[index]) {
-          __currentStateIndex = index;
-          this.update(this.state[index].attributes, method);
-        }
-      };
       this.undo = function() {
         if (__currentStateIndex > 0) {
-          this.changeToState(--__currentStateIndex, 'undo');
+          this._changeToState(--__currentStateIndex, 'undo');
         }
       };
       this.redo = function() {
-        if (__currentStateIndex < this.defaults.stateMaxLength) {
-          this.changeToState(++__currentStateIndex, 'redo');
+        if (__currentStateIndex < this.maxStatesLength) {
+          this._changeToState(++__currentStateIndex, 'redo');
         }
       };
       this.destroy = function() {
@@ -306,12 +325,12 @@
     exports = function(options) {
       this._constructor = function() {
         _.extend(true, this, mixins);
+        _.extend(true, this, defaults.view);
         this.bindings = [];
         this.views = [];
         this.template = options.template;
         this.destroyModelOnRemove = false;
         this.state = new Bacon.Bus();
-        this.defaults = defaults.view;
         _.each(options, function(key, value) {
           if (typeof value === 'function') {
             this[key] = value;

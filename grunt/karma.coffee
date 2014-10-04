@@ -50,7 +50,7 @@ module.exports =
     }
     {
       pattern:'node_modules/jquery/dist/jquery.js'
-      included: false
+      included: true
     }
     {
       pattern:'node_modules/baconjs/dist/Bacon.js'

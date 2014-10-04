@@ -26,7 +26,7 @@ define(function(require, exports, module) {
      */
     binders: require('./utils/binders'),
     /**
-     * @module Butter.Model
+     * @module Butter.Data
      */
     Model: require('./Model'),
     /**

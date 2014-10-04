@@ -15,8 +15,10 @@ define(function(require, exports, module) {
      * @private
      */
     this._constructor = function() {
-
+      // extend this class with the default mixins used for any Butter class
       _.extend(true, this, mixins);
+      // getting some useful options shared between any view class
+      _.extend(true, this, defaults.view);
 
       this.bindings = [];
       this.views = [];
@@ -24,7 +26,6 @@ define(function(require, exports, module) {
       this.destroyModelOnRemove = false;
       // Special property representing the state of the current view
       this.state = new Bacon.Bus();
-      this.defaults = defaults.view;
 
       // Extend this view with some other custom events passed via options
       _.each(options, function(key, value) {

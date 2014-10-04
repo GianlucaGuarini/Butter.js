@@ -9,7 +9,7 @@ define(function(require, exports, module) {
       destroyModelsCreated: true
     },
     model: {
-      stateMaxLength: 12
+      maxStatesLength: 10
     }
   };
 });

@@ -8,12 +8,13 @@ define(function(require, exports, module) {
     defaults = require('./utils/defaults'),
     mixins = require('./utils/mixins');
 
-  module.exports = function(data) {
+  module.exports = function(initialData) {
     /**
      * Private stuff
      * @private
      */
-    var __currentStateIndex = 0;
+    var __currentStateIndex = 0,
+      __initialData = {};
 
     /**
      * @private
@@ -21,21 +22,32 @@ define(function(require, exports, module) {
     this._constructor = function() {
       // extend this class with the default mixins used for any Butter class
       _.extend(true, this, mixins);
-
+      // getting some useful options shared between any model class
+      _.extend(true, this, defaults.model);
       // this array will contain all the data changes of this model
       // its max length is specified in the Butter.defaults.model
       this.state = [];
-      // getting some useful options shared on any model class
-      this.defaults = defaults.model;
       // creating the changes stream that could be listened from the outside
       this.changes = new Bacon.Bus();
       // other stream that could be listened to check all the events triggered by this model
       this.events = new Bacon.Bus();
       // set the initial data
-      if (_.isObject(data)) {
-        this.set(data);
+      if (_.isObject(initialData)) {
+        this.set(initialData);
+        __initialData = this.get();
       }
       return this;
+    };
+
+    /**
+     * Change this model data restoring them to a previous state
+     * @private
+     */
+    this._changeToState = function(index, method) {
+      if (this.state[index]) {
+        __currentStateIndex = index;
+        this.update(this.state[index].attributes, method);
+      }
     };
     /**
      * Return this model data as valid string
@@ -63,7 +75,6 @@ define(function(require, exports, module) {
         // return the all model attributes by cloning them in a new object
         return _.extend(true, {}, currentState.attributes);
       }
-      return this;
     };
     /**
      * Set/Update the data managed by this model
@@ -114,11 +125,11 @@ define(function(require, exports, module) {
       return this;
     };
     /**
-     * Reset th
-     * @return {[type]} [description]
+     * Reset the model to its initial state
+     * @public
      */
     this.reset = function() {
-      this.update({}, 'reset');
+      this.update(__initialData, 'reset');
 
       return this;
     };
@@ -139,7 +150,7 @@ define(function(require, exports, module) {
           attributes: attributes
         });
 
-        if (this.state.length > this.defaults.stateMaxLength + 1) {
+        if (this.state.length > this.maxStatesLength + 1) {
           this.state.shift();
         }
         __currentStateIndex = this.state.length - 1;
@@ -147,38 +158,64 @@ define(function(require, exports, module) {
       }
 
     };
+
     /**
+     * Link this model to another
+     * @public
+     */
+    this.bind = function(destination, sourcePath, destinationPath, doubleWay) {
+
+      var _doubleWay = _.isUndefined(doubleWay) ? true : doubleWay;
+
+      var updateModel = function(value) {
+        if (destinationPath) {
+          destination.set(destinationPath, value);
+        } else {
+          destination.set(value);
+        }
+      };
+      if (sourcePath) {
+        this.listen(sourcePath).onValue(updateModel);
+      } else {
+        this.changes.skipDuplicates(_.isEqual).onValue(updateModel);
+      }
+
+      // Bind this model also to the source
+      if (_doubleWay) {
+        destination.bind(this, destinationPath, sourcePath, false);
+      }
+
+    };
+
+    /**
+     * Return a changes stream only a specific internal attribute of this model
      * @public
      */
     this.listen = function(path) {
-      return this.changes.map('.' + path).skipDuplicates(_.isEqual);
+      return this.changes.map('.' + path)
+        .skipDuplicates(_.isEqual);
     };
+
     /**
-     * @public
-     */
-    this.changeToState = function(index, method) {
-      if (this.state[index]) {
-        __currentStateIndex = index;
-        this.update(this.state[index].attributes, method);
-      }
-    };
-    /**
+     * Switch the model state to a previous version
      * @public
      */
     this.undo = function() {
       if (__currentStateIndex > 0) {
-        this.changeToState(--__currentStateIndex, 'undo');
+        this._changeToState(--__currentStateIndex, 'undo');
       }
     };
     /**
+     * Update the model data canceling the effect of the undo method
      * @public
      */
     this.redo = function() {
-      if (__currentStateIndex < this.defaults.stateMaxLength) {
-        this.changeToState(++__currentStateIndex, 'redo');
+      if (__currentStateIndex < this.maxStatesLength) {
+        this._changeToState(++__currentStateIndex, 'redo');
       }
     };
     /**
+     * Destroy the model and stop its data streams
      * @public
      */
     this.destroy = function() {

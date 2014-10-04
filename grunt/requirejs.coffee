@@ -24,12 +24,16 @@ module.exports = (grunt, options) =>
     # mainConfigFile: 'src/requirejs-config.js'
     preserveLicenseComments: false
     findNestedDependencies: true
+    paths:
+      jquery: '../node_modules/jquery/dist/jquery'
+      baconjs: '../node_modules/baconjs/dist/Bacon'
     onModuleBundleComplete: (data) ->
       outputFile = data.path
       # use the amdclean to remove all the require functions
       # check the options https://github.com/gfranko/amdclean
       fs.writeFileSync outputFile, amdclean.clean(
         code: fs.readFileSync(outputFile)
+        aggressiveOptimizations: true
         # wrap the output in a UMD (Universal Module Definition) pattern
         wrap:
           start: banner + '\n' + startFrag

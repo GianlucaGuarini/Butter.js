@@ -1,6 +1,5 @@
 define(function(require, exports, module) {
   'use strict';
-  var $ = require('jquery');
   /**
    * @module Butter.helpers
    */
@@ -20,6 +19,9 @@ define(function(require, exports, module) {
     },
     isFunction: function(value) {
       return $.type(value) === 'function';
+    },
+    isUndefined: function(value) {
+      return $.type(value) === 'undefined';
     },
     isEqual: function(value1, value2) {
       return JSON.stringify(value1) === JSON.stringify(value2);
