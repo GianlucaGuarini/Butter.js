@@ -9,7 +9,6 @@ define(function(require, exports, module) {
 
   module.exports = function(options) {
 
-
     /**
      * Initialize this class with the options passed to it
      * @private
@@ -23,7 +22,7 @@ define(function(require, exports, module) {
       this.bindings = [];
       this.views = [];
       this.template = options.template;
-      this.destroyModelOnRemove = false;
+      this.destroyDataOnRemove = false;
       // Special property representing the state of the current view
       this.state = new Bacon.Bus();
 
@@ -31,13 +30,13 @@ define(function(require, exports, module) {
       _.each(options, function(key, value) {
         if (typeof value === 'function') {
           this[key] = value;
-        } else if (key === 'model') {
-          if (value instanceof Butter.Model) {
+        } else if (key === 'data') {
+          if (value instanceof Butter.Data) {
             this[key] = value;
           } else {
-            this[key] = new Butter.Model(value);
-            if (this.destroyModelsCreated) {
-              this.destroyModelOnRemove = true;
+            this[key] = new Butter.Data(value);
+            if (this.destroyDatasCreated) {
+              this.destroyDataOnRemove = true;
             }
           }
         }
@@ -133,7 +132,7 @@ define(function(require, exports, module) {
       /**
        *  Destroy the model created with this view because we assume it's not shared with other views
        */
-      if (this.destroyModelOnRemove) {
+      if (this.destroyDataOnRemove) {
         this.model.destroy();
       }
       this.$el.remove();

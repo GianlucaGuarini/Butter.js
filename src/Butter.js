@@ -28,7 +28,7 @@ define(function(require, exports, module) {
     /**
      * @module Butter.Data
      */
-    Model: require('./Model'),
+    Data: require('./Data'),
     /**
      * @module Butter.View
      */

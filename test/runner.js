@@ -32,7 +32,7 @@ mocha.setup('bdd');
 
 require([
   '../test/specs/core.specs',
-  '../test/specs/model.specs'
+  '../test/specs/data.specs'
 ], function() {
 
   var runner;

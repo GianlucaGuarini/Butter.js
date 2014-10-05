@@ -1,5 +1,5 @@
 define(function(require, exports, module) {
-  'use strict';
+  //'use strict';
   /**
    * @module Butter.helpers
    */
@@ -16,6 +16,9 @@ define(function(require, exports, module) {
     },
     isString: function(value) {
       return $.type(value) === 'string';
+    },
+    isArray: function(value) {
+      return $.type(value) === 'array';
     },
     isFunction: function(value) {
       return $.type(value) === 'function';
@@ -47,7 +50,9 @@ define(function(require, exports, module) {
       return value;
     },
     setObjectValueByPath: function(obj, path, value) {
+
       path = path.split('.');
+
       for (var i = 0; i < path.length - 1; i++) {
         if (!obj[path[i]]) {
           return false;

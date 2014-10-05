@@ -8,7 +8,7 @@ define(function(require, exports, module) {
       binderSelector: 'data-',
       destroyModelsCreated: true
     },
-    model: {
+    data: {
       maxStatesLength: 10
     }
   };

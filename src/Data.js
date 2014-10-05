@@ -1,20 +1,20 @@
 define(function(require, exports, module) {
   'use strict';
   /**
-   * @module Butter.Model
+   * @module Butter.Data
    */
 
   var _ = require('./utils/helpers'),
     defaults = require('./utils/defaults'),
     mixins = require('./utils/mixins');
 
-  module.exports = function(initialData) {
+  module.exports = function(initialValues) {
     /**
      * Private stuff
      * @private
      */
     var __currentStateIndex = 0,
-      __initialData = {};
+    __initialValues = null;
 
     /**
      * @private
@@ -22,25 +22,25 @@ define(function(require, exports, module) {
     this._constructor = function() {
       // extend this class with the default mixins used for any Butter class
       _.extend(true, this, mixins);
-      // getting some useful options shared between any model class
-      _.extend(true, this, defaults.model);
-      // this array will contain all the data changes of this model
-      // its max length is specified in the Butter.defaults.model
+      // getting some useful options shared between any Data class
+      _.extend(true, this, defaults.data);
+      // this array will contain all the values of this class
+      // its max length is specified in the Butter.defaults.data
       this.state = [];
       // creating the changes stream that could be listened from the outside
       this.changes = new Bacon.Bus();
-      // other stream that could be listened to check all the events triggered by this model
+      // stream that could be listened to check all the events triggered by this class
       this.events = new Bacon.Bus();
       // set the initial data
-      if (_.isObject(initialData)) {
-        this.set(initialData);
-        __initialData = this.get();
+      if (_.isObject(initialValues) || _.isArray(initialValues)) {
+        this.set(initialValues);
+        __initialValues = this.get();
       }
       return this;
     };
 
     /**
-     * Change this model data restoring them to a previous state
+     * Change this class data restoring them to a previous state
      * @private
      */
     this._changeToState = function(index, method) {
@@ -50,34 +50,34 @@ define(function(require, exports, module) {
       }
     };
     /**
-     * Return this model data as valid string
+     * Return this class data as valid string
      * @public
      */
     this.toString = function() {
       return JSON.stringify(this.get());
     };
     /**
-     * Get any value of the model by a path
-     * If no path is specified we get all the model attributes
-     * @param { String } path: the path to the model attribute
+     * Get any value of this class by a path
+     * If no path is specified we get all the class attributes
+     * @param { String } path: the path to the attribute
      * @public
      */
     this.get = function(path) {
       var currentState = this.state[__currentStateIndex];
-      // check if this model has been set at least once
+      // check if this class data have been set at least once
       // by checking its current state
       if (!currentState) {
         return {};
       } else if (_.isString(path)) {
-        // get an internal property of this model
+        // get an internal property of this class
         return _.getObjectValueByPath(currentState.attributes, path);
       } else {
-        // return the all model attributes by cloning them in a new object
+        // return the all class attributes by cloning them in a new object
         return _.extend(true, {}, currentState.attributes);
       }
     };
     /**
-     * Set/Update the data managed by this model
+     * Set/Update the data managed by this class
      * selecting a deep property or just using an object
      * @param { Object|String } : path to a deep value to update or object to set/update
      * @param { * } : in case of a path for a deep update here you can set the new property
@@ -85,7 +85,7 @@ define(function(require, exports, module) {
      */
     this.set = function() {
 
-      // get all the current model attributes
+      // get all the current class attributes
       var attributes = this.get(),
         // assuming we don't need to update this
         mustUpdate = false;
@@ -110,7 +110,7 @@ define(function(require, exports, module) {
       return this;
     };
     /**
-     * Remove any property from the current model
+     * Remove any property from the current class
      * @param { String } path: path to the value to remove
      * @public
      */
@@ -125,16 +125,16 @@ define(function(require, exports, module) {
       return this;
     };
     /**
-     * Reset the model to its initial state
+     * Reset the class attributes to its initial state
      * @public
      */
     this.reset = function() {
-      this.update(__initialData, 'reset');
+      this.update(__initialValues, 'reset');
 
       return this;
     };
     /**
-     * Update this model attributes
+     * Update this class attributes
      * @param { Object } attributes: new data to set
      * @public
      */
@@ -160,14 +160,14 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Link this model to another
+     * Link this class to another of the same type
      * @public
      */
     this.bind = function(destination, sourcePath, destinationPath, doubleWay) {
 
       var _doubleWay = _.isUndefined(doubleWay) ? true : doubleWay;
 
-      var updateModel = function(value) {
+      var updateData = function(value) {
         if (destinationPath) {
           destination.set(destinationPath, value);
         } else {
@@ -175,12 +175,12 @@ define(function(require, exports, module) {
         }
       };
       if (sourcePath) {
-        this.listen(sourcePath).onValue(updateModel);
+        this.listen(sourcePath).onValue(updateData);
       } else {
-        this.changes.skipDuplicates(_.isEqual).onValue(updateModel);
+        this.changes.skipDuplicates(_.isEqual).onValue(updateData);
       }
 
-      // Bind this model also to the source
+      // Bind this class also to the source
       if (_doubleWay) {
         destination.bind(this, destinationPath, sourcePath, false);
       }
@@ -188,7 +188,7 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Return a changes stream only a specific internal attribute of this model
+     * Return a changes stream only on a specific internal attribute of this class
      * @public
      */
     this.listen = function(path) {
@@ -197,7 +197,7 @@ define(function(require, exports, module) {
     };
 
     /**
-     * Switch the model state to a previous version
+     * Switch the class state to a previous version
      * @public
      */
     this.undo = function() {
@@ -206,7 +206,7 @@ define(function(require, exports, module) {
       }
     };
     /**
-     * Update the model data canceling the effect of the undo method
+     * Update the class attributes canceling the effect of the undo method
      * @public
      */
     this.redo = function() {
@@ -215,7 +215,7 @@ define(function(require, exports, module) {
       }
     };
     /**
-     * Destroy the model and stop its data streams
+     * Destroy the class and stop its data streams
      * @public
      */
     this.destroy = function() {

@@ -8,10 +8,10 @@ define(function(require, exports, module) {
      * To bind the text of any html element to the view data
      * [data-text] binder
      */
-    'text': function($el, model, path) {
+    'text': function($el, data, path) {
       return {
         set: function(value) {
-          model
+          data
             .listen(path)
             .onValue($el, 'text');
         }
@@ -21,11 +21,11 @@ define(function(require, exports, module) {
      * To bind the value of any text input
      * [data-val] binder
      */
-    'val': function($el, model, path) {
+    'val': function($el, data, path) {
       return {
         events: function() {
           var changes = $el.asEventStream('change');
-          //model.changes.plug(changes.map())
+          //data.changes.plug(changes.map())
         },
         get: function() {
           return $el.val();

@@ -65,9 +65,8 @@
     root.Butter = factory(Bacon, jQuery);
   }
 }(this, function(Bacon, $) {
-  var utils_helpers, utils_defaults, utils_mixins, utils_binders, Model, View, Butter, exports;
+  var utils_helpers, utils_defaults, utils_mixins, utils_binders, Data, View, Butter, exports;
   utils_helpers = exports = function(exports) {
-
     exports = {
       $: $,
       extend: $.extend,
@@ -81,6 +80,9 @@
       },
       isString: function(value) {
         return $.type(value) === 'string';
+      },
+      isArray: function(value) {
+        return $.type(value) === 'array';
       },
       isFunction: function(value) {
         return $.type(value) === 'function';
@@ -137,7 +139,7 @@
         binderSelector: 'data-',
         destroyModelsCreated: true
       },
-      model: {
+      data: {
         maxStatesLength: 10
       }
     };
@@ -170,14 +172,14 @@
   utils_binders = function(exports) {
 
     exports = {
-      'text': function($el, model, path) {
+      'text': function($el, data, path) {
         return {
           set: function(value) {
-            model.listen(path).onValue($el, 'text');
+            data.listen(path).onValue($el, 'text');
           }
         };
       },
-      'val': function($el, model, path) {
+      'val': function($el, data, path) {
         return {
           events: function() {
             var changes = $el.asEventStream('change');
@@ -193,23 +195,23 @@
     };
     return exports;
   }({});
-  Model = function(exports) {
+  Data = function(exports) {
 
     var _ = utils_helpers,
       defaults = utils_defaults,
       mixins = utils_mixins;
-    exports = function(initialData) {
+    exports = function(initialValues) {
       var __currentStateIndex = 0,
-        __initialData = {};
+        __initialValues = null;
       this._constructor = function() {
         _.extend(true, this, mixins);
-        _.extend(true, this, defaults.model);
+        _.extend(true, this, defaults.data);
         this.state = [];
         this.changes = new Bacon.Bus();
         this.events = new Bacon.Bus();
-        if (_.isObject(initialData)) {
-          this.set(initialData);
-          __initialData = this.get();
+        if (_.isObject(initialValues) || _.isArray(initialValues)) {
+          this.set(initialValues);
+          __initialValues = this.get();
         }
         return this;
       };
@@ -256,7 +258,7 @@
         return this;
       };
       this.reset = function() {
-        this.update(__initialData, 'reset');
+        this.update(__initialValues, 'reset');
         return this;
       };
       this.update = function(attributes, method) {
@@ -279,7 +281,7 @@
       };
       this.bind = function(destination, sourcePath, destinationPath, doubleWay) {
         var _doubleWay = _.isUndefined(doubleWay) ? true : doubleWay;
-        var updateModel = function(value) {
+        var updateData = function(value) {
           if (destinationPath) {
             destination.set(destinationPath, value);
           } else {
@@ -287,9 +289,9 @@
           }
         };
         if (sourcePath) {
-          this.listen(sourcePath).onValue(updateModel);
+          this.listen(sourcePath).onValue(updateData);
         } else {
-          this.changes.skipDuplicates(_.isEqual).onValue(updateModel);
+          this.changes.skipDuplicates(_.isEqual).onValue(updateData);
         }
         if (_doubleWay) {
           destination.bind(this, destinationPath, sourcePath, false);
@@ -329,18 +331,18 @@
         this.bindings = [];
         this.views = [];
         this.template = options.template;
-        this.destroyModelOnRemove = false;
+        this.destroyDataOnRemove = false;
         this.state = new Bacon.Bus();
         _.each(options, function(key, value) {
           if (typeof value === 'function') {
             this[key] = value;
-          } else if (key === 'model') {
-            if (value instanceof Butter.Model) {
+          } else if (key === 'data') {
+            if (value instanceof Butter.Data) {
               this[key] = value;
             } else {
-              this[key] = new Butter.Model(value);
-              if (this.destroyModelsCreated) {
-                this.destroyModelOnRemove = true;
+              this[key] = new Butter.Data(value);
+              if (this.destroyDatasCreated) {
+                this.destroyDataOnRemove = true;
               }
             }
           }
@@ -391,7 +393,7 @@
       this.remove = function() {
         this.state.push('beforeRemove');
         this.state.end();
-        if (this.destroyModelOnRemove) {
+        if (this.destroyDataOnRemove) {
           this.model.destroy();
         }
         this.$el.remove();
@@ -408,7 +410,7 @@
       defaults: utils_defaults,
       mixins: utils_mixins,
       binders: utils_binders,
-      Model: Model,
+      Data: Data,
       View: View
     };
     return exports;

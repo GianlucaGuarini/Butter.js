@@ -1,5 +1,5 @@
 define(function(require) {
-  var Model = require('Model'),
+  var Data = require('Data'),
     chai = require('chai'),
     should = chai.should,
     expect = chai.expect,
@@ -7,7 +7,7 @@ define(function(require) {
 
   chai.use(sinonChai);
 
-  describe('Model:', function() {
+  describe('Data:', function() {
     var food,
       initialData = {
         tomatoes: 'myTomatoes',
@@ -19,7 +19,7 @@ define(function(require) {
         }
       };
     beforeEach(function() {
-      food = new Model(initialData);
+      food = new Data(initialData);
     });
     it('It can be created and setup correctly', function() {
 
@@ -127,8 +127,8 @@ define(function(require) {
 
     });
     it('It can be bound to another model', function() {
-      var food2 = new Model(),
-        food3 = new Model(initialData);
+      var food2 = new Data(),
+        food3 = new Data(initialData);
       food.bind(food2);
       food.set('name', 'pizza');
       expect(food2.get('name')).to.be.equal('pizza');

@@ -30,7 +30,7 @@
         name: 'onPointerDown',
         el: 'img'
       }],
-      model: new Butter.Model({
+      data: new Butter.Data({
         value: 10
       }),
       beforeRender: function() {
@@ -40,7 +40,7 @@
         console.log('afterRender');
       }
     }),
-      model = view.model;
+      model = view.data;
     view.state.log();
     model.listen('value.0.name');
     model.changes.onEnd(function(){
