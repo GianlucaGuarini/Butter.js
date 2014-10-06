@@ -33,29 +33,10 @@ module.exports =
       pattern: 'node_modules/requirejs/require.js'
     }
     {
-      pattern:'node_modules/chai/chai.js'
+      pattern:'node_modules/**/**/*.js'
       included: false
     }
-    {
-      pattern:'node_modules/sinon/pkg/sinon.js'
-      included: true
-    }
-    {
-      pattern:'node_modules/sinon-chai/lib/sinon-chai.js'
-      included: false
-    }
-    {
-      pattern:'node_modules/simulant/simulant.js'
-      included: false
-    }
-    {
-      pattern:'node_modules/jquery/dist/jquery.js'
-      included: true
-    }
-    {
-      pattern:'node_modules/baconjs/dist/Bacon.js'
-      included: false
-    }
+
     {
       pattern:'dist/**/*.js'
       included: false

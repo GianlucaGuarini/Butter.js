@@ -13,7 +13,7 @@
   ],
   "devDependencies": {
     "amdclean": "^2.2.7",
-    "chai": "^1.9.2",
+    "expect.js": "^0.3.1",
     "grunt": "^0.4.5",
     "grunt-contrib-clean": "^0.5.0",
     "grunt-contrib-compass": "^0.9.1",
@@ -38,7 +38,7 @@
     "requirejs": "^2.1.15",
     "simulant": "^0.1.0",
     "sinon": "^1.10.3",
-    "sinon-chai": "^2.5.0"
+    "sinon-expect": "^0.2.0"
   },
   "author": "Gianluca Guarini (http://gianlucaguarini.com/)",
   "githubUsername": "gianlucaguarini",
@@ -60,6 +60,6 @@
   "homepage": "https://github.com/GianlucaGuarini/Butter.js",
   "dependencies": {
     "baconjs": "^0.7.22",
-    "jquery": "^2.1.1"
+    "jquery": "^1.1.1"
   }
 }

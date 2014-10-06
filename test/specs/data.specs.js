@@ -1,11 +1,5 @@
 define(function(require) {
-  var Data = require('Data'),
-    chai = require('chai'),
-    should = chai.should,
-    expect = chai.expect,
-    sinonChai = require('sinon-chai');
-
-  chai.use(sinonChai);
+  var Data = require('Data');
 
   describe('Data:', function() {
     var food,
@@ -24,8 +18,8 @@ define(function(require) {
     it('It can be created and setup correctly', function() {
 
       expect(food.state).to.be.an('array');
-      expect(food.changes).is.instanceof(Bacon.Bus);
-      expect(food.events).is.instanceof(Bacon.Bus);
+      expect(food.changes).to.be.a(Bacon.Bus);
+      expect(food.events).to.be.a(Bacon.Bus);
 
       // get
       expect(food.get('tomatoes')).to.be.equal('myTomatoes');
@@ -45,14 +39,15 @@ define(function(require) {
       // unset
       food.unset('spices.secretIngredients');
       expect(food.get('secretIngredients')).to.be.undefined;
-      expect(food.get()).to.deep.equal({
+      expect(food.toString()).to.be.equal(JSON.stringify({
         tomatoes: 'myTomatoes',
-        mushroom: '1down',
-        spices: 'nope'
-      });
+        spices: 'nope',
+        mushroom: '1down'
+
+      }));
       // reset
       food.reset();
-      expect(food.get()).to.deep.equal(initialData);
+      expect(food.toString()).to.be.equal(JSON.stringify(initialData));
 
     });
     it('Its listeners work as expected', function() {
@@ -66,7 +61,7 @@ define(function(require) {
         salt: 'notTooMuch'
       });
       food.set('spices.secretIngredients', deepsecretIngredients);
-      expect(listenCallback).to.have.been.calledWith(food.get('spices.secretIngredients'));
+      expect(listenCallback).was.calledWith(food.get('spices.secretIngredients'));
       food.set('spices.secretIngredients', food.get('spices.secretIngredients'));
 
       food.set('name', 'delicious Italian food');
@@ -75,16 +70,17 @@ define(function(require) {
 
       food.unset('spices.secretIngredients');
 
-      expect(listenCallback).to.have.been.callCount(3);
-      expect(callback).to.have.been.callCount(5);
+      expect(listenCallback).was.callCount(3);
+      expect(callback).was.callCount(5);
 
 
     });
     it('Its states could be switched with the undo and redo methods', function() {
+      this.timeout(10000);
       food.set('quantity', 4);
       expect(food.get('quantity')).to.be.equal(4);
       food.undo();
-      expect(food.get('quantity')).to.be.undefined;
+      expect(food.get('quantity')).to.be.an('undefined');
 
       var oldquantity,
         i,
@@ -151,7 +147,7 @@ define(function(require) {
       food.set('name', 'pasta');
       food.undo();
       food.redo();
-      expect(callback).to.have.been.calledThrice;
+      expect(callback).was.calledThrice;
     });
     it('It can be returned as string', function() {
       expect(food.toString()).to.be.equal(JSON.stringify(initialData));
@@ -161,7 +157,7 @@ define(function(require) {
       var callback = sinon.spy();
       food.events.onEnd(callback);
       food.destroy();
-      expect(callback).to.have.been.calledOnce;
+      expect(callback).was.calledOnce;
     });
 
   });
