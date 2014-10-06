@@ -31,6 +31,7 @@ module.exports = (grunt) ->
   grunt.registerTask 'test', [
     'build'
     'karma:run'
+    'coveralls'
     'connect'
     'saucelabs-mocha'
   ]

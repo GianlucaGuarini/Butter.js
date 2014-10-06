@@ -5,6 +5,7 @@ Functional Reactive Progamming Javascript Framework
 =========
 
 [![Build Status](https://travis-ci.org/GianlucaGuarini/Butter.js.svg?branch=master)](https://travis-ci.org/GianlucaGuarini/Butter.js)
+[![Coverage Status](https://img.shields.io/coveralls/GianlucaGuarini/Butter.js.svg)](https://coveralls.io/r/GianlucaGuarini/Butter.js)
 
 [![Sauce Test Status](https://saucelabs.com/browser-matrix/butter.svg)](https://saucelabs.com/u/butter)
 
