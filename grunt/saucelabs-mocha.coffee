@@ -8,8 +8,10 @@ module.exports = (grunt, options) =>
       username: 'butterjs'
       key: '4ca4ecba-e1b1-4572-bc02-8189387fc690'
       browsers: grunt.file.readJSON('test/saucelabs-browsers.json')
+      testname: 'Butter.js tests',
       build: process.env.TRAVIS_JOB_ID
       testname: options.pkg.name
+      throttled: 3
       sauceConfig:
         'video-upload-on-pass': false
 

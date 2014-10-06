@@ -35,7 +35,7 @@ require([
     '../test/specs/data.specs'
   ], function() {
 
-    //enhance expect adding the sinon methods
+    // extend expect adding the sinon methods
     window.expect = SinonExpect.enhance(expect, sinon, 'was');
 
     var runner;
@@ -44,10 +44,20 @@ require([
     if (karma) {
       karma.start();
     } else {
-      // browsers
+      //browser
+      runner = mocha.run();
+
       var failedTests = [];
 
+      runner.on('end', function() {
+        window.mochaResults = runner.stats;
+        window.mochaResults.reports = failedTests;
+      });
+
+      runner.on('fail', logFailure);
+
       function logFailure(test, err) {
+
         var flattenTitles = function(test) {
           var titles = [];
           while (test.parent.title) {
@@ -64,16 +74,7 @@ require([
           stack: err.stack,
           titles: flattenTitles(test)
         });
-      }
-
-      runner = mocha.run();
-
-      runner.on('end', function() {
-        window.mochaResults = runner.stats;
-        window.mochaResults.reports = failedTests;
-      });
-
-      runner.on('fail', logFailure);
+      };
     }
 
   });
