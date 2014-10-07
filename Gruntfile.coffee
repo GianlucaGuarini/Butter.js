@@ -55,7 +55,7 @@ module.exports = (grunt) ->
   grunt.registerTask 'default', [
     'clean:build'
     'build'
-    'karma'
+    'karma:run'
     'doc'
   ]
 

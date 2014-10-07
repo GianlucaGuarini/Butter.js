@@ -1,5 +1,5 @@
 /**
- *
+ * Butter.js
  * Version: @VERSION
  * Author: Gianluca Guarini
  * Contact: gianluca.guarini@gmail.com

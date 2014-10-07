@@ -1,6 +1,6 @@
 /**
- *
- * Version: 0.0.1-alpha
+ * Butter.js
+ * Version: 0.0.1-alpha.1
  * Author: Gianluca Guarini
  * Contact: gianluca.guarini@gmail.com
  * Website: http://www.gianlucaguarini.com/
@@ -57,9 +57,7 @@
     // Node. Does not work with strict CommonJS, but
     // only CommonJS-like environments that support module.exports,
     // like Node.
-    Bacon = require('baconjs');
-    $ = require('jquery');
-    module.exports = factory();
+    module.exports = factory(require('baconjs'), require('jquery'));
   } else {
     // Browser globals (root is window)
     root.Butter = factory(Bacon, jQuery);

@@ -2,8 +2,8 @@ module.exports =
   options:
     basePath: process.cwd()
     singleRun: true
-    captureTimeout: 7000
-    autoWatch: true
+    autoWatch: false
+    logLevel: 'ERROR'
     captureConsole: true
     browsers: ['PhantomJS']
     preprocessors:

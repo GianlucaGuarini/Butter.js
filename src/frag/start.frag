@@ -6,12 +6,10 @@
     // Node. Does not work with strict CommonJS, but
     // only CommonJS-like environments that support module.exports,
     // like Node.
-    Bacon = require('baconjs');
-    $ = require('jquery');
-    module.exports = factory();
+    module.exports = factory(require('baconjs'),require('jquery'));
   } else {
     // Browser globals (root is window)
-    root.@SCRIPT = factory(Bacon,jQuery);
+    root.Butter = factory(Bacon,jQuery);
   }
 }(this, function (Bacon,$) {
   'use strict';

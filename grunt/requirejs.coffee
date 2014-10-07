@@ -8,10 +8,8 @@ module.exports = (grunt, options) =>
   mainFile = 'Butter';
   # Get the script intro and outro strings
   banner = fs.readFileSync('src/frag/banner.frag','utf8')
-                .replace(/@SCRIPT/g, options.pkg.name)
                 .replace(/@VERSION/g, options.pkg.version)
   startFrag = fs.readFileSync('src/frag/start.frag','utf8')
-                .replace(/@SCRIPT/g, options.pkg.name)
                 .replace(/@VERSION/g, options.pkg.version)
   endFrag = fs.readFileSync('src/frag/end.frag','utf8')
 
@@ -42,13 +40,13 @@ module.exports = (grunt, options) =>
   # expanded release
   expanded:
     options: grunt.util._.extend({
-        out: 'dist/' + options.pkg.name + '.js'
+        out: 'dist/Butter.js'
         optimize: 'none'
       }, requirejsOptions)
   # minified release
   min:
     options:
       grunt.util._.extend({
-        out: 'dist/' + options.pkg.name + '.min.js'
+        out: 'dist/Butter.min.js'
         optimize: 'uglify2'
       }, requirejsOptions)
