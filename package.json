@@ -1,5 +1,5 @@
 {
-  "name": "Butter",
+  "name": "butter",
   "version": "0.0.1-alpha",
   "description": "The reactive programming framework that will make your code tastier",
   "main": "index.js",
