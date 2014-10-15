@@ -15,9 +15,9 @@ define(function(require, exports, module) {
      */
     this._constructor = function() {
       // extend this class with the default mixins used for any Butter class
-      _.extend(true, this, mixins);
+      _.extend(this, mixins);
       // getting some useful options shared between any view class
-      _.extend(true, this, defaults.view);
+      _.extend(this, defaults.view);
 
       this.bindings = [];
       this.views = [];
@@ -112,7 +112,7 @@ define(function(require, exports, module) {
     this.bind = function() {
       this.unbind();
       // Bind the view events
-      _.each(options.events, function(i, event) {
+      _.each(options.events, function(event, i) {
         this[event.name] = this.$el.asEventStream(event.type, event.el);
       }, this);
       // Bind the markup binders

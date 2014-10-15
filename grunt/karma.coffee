@@ -46,6 +46,10 @@ module.exports =
       included: false
     }
     {
+      pattern:'test/requirejs-config.js'
+      included: false
+    }
+    {
       pattern:'test/specs/**/*.js'
       included: false
     }

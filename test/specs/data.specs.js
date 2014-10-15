@@ -1,5 +1,11 @@
 define(function(require) {
-  var Data = require('Data');
+  var Data = require('Data'),
+    expect = require('expect'),
+    sinon = require('sinon'),
+    SinonExpect = require('sinon-expect');
+
+  // extend expect adding the sinon methods
+  expect = SinonExpect.enhance(expect, sinon, 'was');
 
   describe('Data:', function() {
     var food,
@@ -56,10 +62,13 @@ define(function(require) {
         deepsecretIngredients = food.get('spices.secretIngredients');
 
       food.changes.onValue(callback);
+
       food.listen('spices.secretIngredients').onValue(listenCallback);
+
       deepsecretIngredients.push({
         salt: 'notTooMuch'
       });
+
       food.set('spices.secretIngredients', deepsecretIngredients);
       expect(listenCallback).was.calledWith(food.get('spices.secretIngredients'));
       food.set('spices.secretIngredients', food.get('spices.secretIngredients'));

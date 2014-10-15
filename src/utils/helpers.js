@@ -1,30 +1,70 @@
 define(function(require, exports, module) {
   //'use strict';
+  //
+  var _toString = Object.prototype.toString,
+    _indexOf = Array.prototype.indexOf,
+    _each = Array.prototype.forEach;
   /**
    * @module Butter.helpers
    */
   module.exports = {
     $: $,
-    extend: $.extend,
-    indexOf: $.inArray,
-    each: function(iterator, callback, context) {
-      return $.each(iterator, context ? this.bind(callback, context) : callback);
+    isBoolean: function(value) {
+      return typeof value === 'boolean';
     },
-    bind: $.proxy,
     isObject: function(value) {
-      return $.type(value) === 'object';
+      return _toString.call(value) === '[object Object]';
     },
     isString: function(value) {
-      return $.type(value) === 'string';
+      return typeof value === 'string';
     },
     isArray: function(value) {
-      return $.type(value) === 'array';
+      return _toString.call(value) === '[object Array]';
     },
     isFunction: function(value) {
-      return $.type(value) === 'function';
+      return typeof value === 'function';
     },
     isUndefined: function(value) {
-      return $.type(value) === 'undefined';
+      return typeof value === 'undefined';
+    },
+    extend: function(destination, source) {
+      for (var property in source) {
+        destination[property] = source[property];
+      }
+      return this.clone(destination);
+    },
+    clone: function(obj) {
+      if (obj) {
+        return JSON.parse(JSON.stringify(obj));
+      } else {
+        return {};
+      }
+    },
+    indexOf: function(element, array) {
+      if (_indexOf) {
+        return _indexOf.call(array, element);
+      } else {
+        return $.inArray(element, array);
+      }
+    },
+    each: function(iterator, callback, context) {
+      var self = this;
+      if (_each) {
+        return _each.call(iterator, context ? this.bind(callback, context) : callback);
+      } else {
+        return $.each(iterator, function(i, elm) {
+          if (context) {
+            self.bind(callback, context, elm, i);
+          } else {
+            callback(elm, i);
+          }
+        });
+      }
+    },
+    bind: function(f, c) {
+      return function() {
+        return f.apply(c, arguments);
+      };
     },
     isEqual: function(value1, value2) {
       return JSON.stringify(value1) === JSON.stringify(value2);

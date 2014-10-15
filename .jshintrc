@@ -19,6 +19,7 @@
   "globals": {
     "Bacon": false,
     "$": false,
+    "jQuery":false,
     "Butter": true,
     "requirejs":false,
     "define": false

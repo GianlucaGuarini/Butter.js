@@ -14,16 +14,16 @@ define(function(require, exports, module) {
      * @private
      */
     var __currentStateIndex = 0,
-    __initialValues = null;
+      __initialValues = null;
 
     /**
      * @private
      */
     this._constructor = function() {
       // extend this class with the default mixins used for any Butter class
-      _.extend(true, this, mixins);
+      _.extend(this, mixins);
       // getting some useful options shared between any Data class
-      _.extend(true, this, defaults.data);
+      _.extend(this, defaults.data);
       // this array will contain all the values of this class
       // its max length is specified in the Butter.defaults.data
       this.state = [];
@@ -63,6 +63,7 @@ define(function(require, exports, module) {
      * @public
      */
     this.get = function(path) {
+
       var currentState = this.state[__currentStateIndex];
       // check if this class data have been set at least once
       // by checking its current state
@@ -73,7 +74,7 @@ define(function(require, exports, module) {
         return _.getObjectValueByPath(currentState.attributes, path);
       } else {
         // return the all class attributes by cloning them in a new object
-        return _.extend(true, {}, currentState.attributes);
+        return _.clone(currentState.attributes);
       }
     };
     /**
@@ -96,9 +97,7 @@ define(function(require, exports, module) {
         mustUpdate = _.setObjectValueByPath(attributes, arguments[0], arguments[1]);
       } else {
         // update or add new values
-        _.each(arguments[0], function(key, value) {
-          attributes[key] = value;
-        });
+        _.extend(attributes, arguments[0]);
         mustUpdate = true;
       }
 

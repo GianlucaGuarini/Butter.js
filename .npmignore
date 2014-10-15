@@ -1,0 +1,28 @@
+lib-cov
+*.seed
+*.log
+*.csv
+*.dat
+*.out
+*.pid
+*.gz
+
+pids
+logs
+results
+
+npm-debug.log
+node_modules
+.sass-cache
+.DS_Store
+.grunt
+
+# Ignore the tests coverage
+test/coverage
+
+# we don't need to push these files
+# they will be copied by the grunt copy task
+_gh-pages
+grunt
+logos
+test
