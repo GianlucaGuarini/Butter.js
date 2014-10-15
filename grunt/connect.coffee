@@ -1,5 +1,5 @@
 # used for the saucelabs tests
 module.exports = server:
   options:
-    base: ''
+    base: '.'
     port: 9999

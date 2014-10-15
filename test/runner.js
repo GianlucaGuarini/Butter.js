@@ -15,6 +15,8 @@ require([
 ], function() {
 
   require([
+    'jquery',
+    'baconjs',
     // tests
     '../test/specs/core.specs',
     '../test/specs/data.specs'
