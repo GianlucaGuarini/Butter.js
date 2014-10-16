@@ -1,6 +1,6 @@
 {
   "name": "butter",
-  "version": "0.0.1-alpha.3",
+  "version": "0.0.1-alpha.4",
   "description": "The reactive programming framework that will make your code tastier",
   "main": "index.js",
   "scripts": {
