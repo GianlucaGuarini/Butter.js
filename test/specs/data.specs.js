@@ -232,9 +232,7 @@ define(function(require) {
       expect(food.toString()).to.be.equal(JSON.stringify(initialData));
     });
 
-    afterEach(function(done) {
-      this.timeout(10000);
-      food.events.onEnd(done);
+    afterEach(function() {
       food.destroy();
     });
 

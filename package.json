@@ -54,7 +54,7 @@
   },
   "homepage": "https://github.com/bagel-framework/Butter.js",
   "dependencies": {
-    "baconjs": "^0.7.22",
+    "baconjs": "^0.7.23",
     "jquery": "^1.1.1"
   },
   "repository": {
