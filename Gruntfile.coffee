@@ -25,6 +25,7 @@ module.exports = (grunt) ->
     'jshint'
     'requirejs'
     'jsbeautifier'
+    'json_generator'
   ]
 
   # build and test the output

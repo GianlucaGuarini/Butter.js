@@ -9,6 +9,7 @@ requirejs.config({
     butter: '../dist/Butter'
   },
   shim: {
+    'utils/helpers': ['jquery'],
     sinon: {
       exports: 'sinon'
     },

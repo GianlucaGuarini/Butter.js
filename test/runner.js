@@ -15,10 +15,7 @@ requirejs.config({
 require([
   '../test/requirejs-config'
 ], function() {
-
   require([
-    'jquery',
-    'baconjs',
     // tests
     '../test/specs/helpers.specs',
     '../test/specs/core.specs',
@@ -31,6 +28,7 @@ require([
     if (karma) {
       karma.start();
     } else {
+
       //browser
       runner = mocha.run();
 
@@ -61,7 +59,7 @@ require([
           stack: err.stack,
           titles: flattenTitles(test)
         });
-      };
+      }
     }
 
   });
