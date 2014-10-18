@@ -52,7 +52,6 @@ define(function(require) {
         },
         breads = [];
 
-
       expect(_.isEqual(_.difference(cake, bread), {
         ingredients: {
           meal: '00',

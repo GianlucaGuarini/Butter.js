@@ -9,6 +9,7 @@ define(function(require) {
 
   describe('Butter.Data', function() {
     var food,
+      foods,
       initialData = {
         name: 'bagel',
         ingredients: {
@@ -21,6 +22,7 @@ define(function(require) {
 
     beforeEach(function() {
       food = new Data(initialData);
+      foods = new Data([]);
     });
 
     it('It can be created and setup correctly', function() {
@@ -169,9 +171,13 @@ define(function(require) {
       expect(callback).was.calledThrice();
     });
 
-    /*it('The add and remove event work only with array data', function(done) {
-      //expect(food.add({})).to.throwException().have.withArgs(false, {});
-    });*/
+    it('The add and remove event work only with array data', function() {
+      foods.add('pasta');
+      foods.add('pane');
+      foods.add('pizza', null, 1);
+      expect(foods.length).to.be.equal(3);
+      expect(foods.get('1')).to.be.equal('pizza');
+    });
 
     it('The sync methods work with a JSON object', function(done) {
       this.timeout(10000);

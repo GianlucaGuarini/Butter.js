@@ -1,5 +1,5 @@
 define(function(require, exports, module) {
-  'use strict';
+  //'use strict';
   //
   /**
    * Private methods
@@ -75,6 +75,7 @@ define(function(require, exports, module) {
         result = value1;
         if (this.isArray(value1)) {
           result = [];
+          console.log(value1);
           this.each(value1, function(value) {
             if (!self.contains(value2, value)) {
               result.push(value);
@@ -123,12 +124,13 @@ define(function(require, exports, module) {
       }
     },
     each: function(iterator, callback, context) {
-      var self = this;
+      var self = this,
+        isObject = this.isObject(iterator);
 
       context = context ? this.bind(callback, context) : callback.prototype;
 
       if (_each && _keys) {
-        if (this.isObject(iterator)) {
+        if (isObject) {
           _each.call(_keys(iterator), function(key) {
             callback.apply(context, [key, iterator[key]]);
           });
@@ -136,8 +138,9 @@ define(function(require, exports, module) {
           return _each.apply(iterator, context);
         }
       } else {
+
         return $.each(iterator, function(i, element) {
-          callback.apply(context, [element, i]);
+          callback.apply(context, isObject ? [i, element] : [element, i]);
         });
       }
     },

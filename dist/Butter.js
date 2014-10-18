@@ -65,7 +65,6 @@
 }(this, function(Bacon, $) {
   var utils_helpers, utils_defaults, utils_mixins, utils_binders, Data, View, Butter, exports;
   utils_helpers = exports = function(exports) {
-
     var _toString = Object.prototype.toString,
       _keys = Object.keys,
       _indexOf = Array.prototype.indexOf,
@@ -126,6 +125,7 @@
           result = value1;
           if (this.isArray(value1)) {
             result = [];
+            console.log(value1);
             this.each(value1, function(value) {
               if (!self.contains(value2, value)) {
                 result.push(value);
@@ -173,10 +173,11 @@
         }
       },
       each: function(iterator, callback, context) {
-        var self = this;
+        var self = this,
+          isObject = this.isObject(iterator);
         context = context ? this.bind(callback, context) : callback.prototype;
         if (_each && _keys) {
-          if (this.isObject(iterator)) {
+          if (isObject) {
             _each.call(_keys(iterator), function(key) {
               callback.apply(context, [
                 key,
@@ -188,7 +189,10 @@
           }
         } else {
           return $.each(iterator, function(i, element) {
-            callback.apply(context, [
+            callback.apply(context, isObject ? [
+              i,
+              element
+            ] : [
               element,
               i
             ]);
@@ -322,7 +326,7 @@
       this.get = function(path) {
         var currentState = this.state[__currentStateIndex];
         if (!currentState) {
-          return {};
+          return initialValues || {};
         } else if (_.isString(path)) {
           return _.getObjectValueByPath(currentState.attributes, path);
         } else {
@@ -433,6 +437,7 @@
       this.add = function(item, path, at) {
         var array = _.isString(path) ? this.get(path) : this.get();
         if (!_.isArray(array)) {
+          console.log(array);
           throw new Error('You cannot push new data in an element that is not an array');
         } else {
           array.splice(at || array.length, 0, item);
@@ -486,6 +491,9 @@
             this.state.shift();
           }
           __currentStateIndex = this.state.length - 1;
+          if (_.isArray(attributes)) {
+            this.length = attributes.length;
+          }
         }
         this.events.push(method);
         return this;

@@ -36,7 +36,6 @@ define(function(require, exports, module) {
 
       // set the initial data
       if (_.isObject(initialValues) || _.isArray(initialValues)) {
-
         this.set(initialValues);
         __initialValues = this.get();
       }
@@ -75,7 +74,7 @@ define(function(require, exports, module) {
       // check if this class data have been set at least once
       // by checking its current state
       if (!currentState) {
-        return {};
+        return initialValues || {};
       } else if (_.isString(path)) {
         // get an internal property of this class
         return _.getObjectValueByPath(currentState.attributes, path);
@@ -273,6 +272,7 @@ define(function(require, exports, module) {
     this.add = function(item, path, at) {
       var array = _.isString(path) ? this.get(path) : this.get();
       if (!_.isArray(array)) {
+        console.log(array);
         throw new Error('You cannot push new data in an element that is not an array');
       } else {
 
@@ -317,8 +317,6 @@ define(function(require, exports, module) {
      */
     this.update = function(attributes, method) {
 
-
-
       var validation = this.validate(attributes);
       // validate the data just passed
       if (validation !== true) {
@@ -341,6 +339,10 @@ define(function(require, exports, module) {
           this.state.shift();
         }
         __currentStateIndex = this.state.length - 1;
+
+        if (_.isArray(attributes)) {
+          this.length = attributes.length;
+        }
 
       }
 
