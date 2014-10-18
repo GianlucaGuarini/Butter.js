@@ -31,12 +31,17 @@ define(function(require) {
       expect(food.changes).to.be.a(Bacon.Bus);
       expect(food.events).to.be.a(Bacon.Bus);
 
+    });
+
+    it('"get" method', function() {
       // get
       expect(food.get('name')).to.be.equal('bagel');
       expect(food.get('ingredients.sweet')).to.be.equal('sugar');
       expect(food.get('ingredients.secretIngredients.0.theyCallIt')).to.be.equal('love');
       expect(food.get('ingredients.sweet')).to.be.equal('sugar');
+    });
 
+    it('"set" method', function() {
       // set
       food.set('mushroom', '1up');
       expect(food.get('mushroom')).to.be.equal('1up');
@@ -45,21 +50,30 @@ define(function(require) {
         ingredients: 'nope'
       });
       expect(food.get('mushroom')).to.be.equal('1down');
+    });
 
+    it('"unset" method', function() {
       // unset
       food.unset('ingredients.secretIngredients');
-      expect(food.get('secretIngredients')).to.be.undefined;
+      expect(food.get('secretIngredients')).to.be(undefined);
       expect(food.toString()).to.be.equal(JSON.stringify({
         name: 'bagel',
-        ingredients: 'nope',
-        mushroom: '1down'
-
+        ingredients: {
+          sweet: 'sugar'
+        }
       }));
+    });
+
+    it('"reset" method', function() {
       // reset
+      food.set({
+        mushroom: '1down',
+        ingredients: 'nope'
+      });
       food.reset();
       expect(food.toString()).to.be.equal(JSON.stringify(initialData));
-
     });
+
 
     it('Its listeners work as expected', function() {
       var callback = sinon.spy(),
@@ -96,7 +110,7 @@ define(function(require) {
       food.set('quantity', 4);
       expect(food.get('quantity')).to.be.equal(4);
       food.undo();
-      expect(food.get('quantity')).to.be.undefined;
+      expect(food.get('quantity')).to.be(undefined);
 
       var oldquantity,
         i,
@@ -219,6 +233,7 @@ define(function(require) {
     });
 
     afterEach(function(done) {
+      this.timeout(10000);
       food.events.onEnd(done);
       food.destroy();
     });
