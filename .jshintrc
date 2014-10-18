@@ -22,6 +22,12 @@
     "jQuery":false,
     "Butter": true,
     "requirejs":false,
-    "define": false
+    "define": false,
+    "it":false,
+    "describe":false,
+    "expect":false,
+    "mocha":false,
+    "beforeEach": false,
+    "afterEach": false
   }
 }

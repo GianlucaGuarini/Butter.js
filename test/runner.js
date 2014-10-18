@@ -1,5 +1,7 @@
 var karma = window.__karma__;
 
+window.FIXTURES_URL = karma ? 'base/test/fixtures/' : 'fixtures/';
+
 if (karma) {
   karma.loaded = function() {};
 }
@@ -18,6 +20,7 @@ require([
     'jquery',
     'baconjs',
     // tests
+    '../test/specs/helpers.specs',
     '../test/specs/core.specs',
     '../test/specs/data.specs'
   ], function() {

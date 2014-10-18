@@ -50,6 +50,10 @@ module.exports =
       included: false
     }
     {
+      pattern:'test/fixtures/**'
+      included: false
+    }
+    {
       pattern:'test/specs/**/*.js'
       included: false
     }

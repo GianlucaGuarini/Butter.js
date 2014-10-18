@@ -1,9 +1,36 @@
 define(function(require, exports, module) {
-  //'use strict';
+  'use strict';
   //
+  /**
+   * Private methods
+   */
   var _toString = Object.prototype.toString,
+    _keys = Object.keys,
     _indexOf = Array.prototype.indexOf,
-    _each = Array.prototype.forEach;
+    _each = Array.prototype.forEach,
+    _parseObjectByPath = function(object, path) {
+      var keyLength,
+        i = 0,
+        key;
+
+      path = path.replace(/\[(\w+)\]/g, '.$1') // convert indexes to properties
+      .replace(/^\./, '') // strip a leading dot
+      .split('.');
+
+      keyLength = path && path.length;
+
+      while (i < keyLength - 1) {
+        key = path[i];
+        object = object[key];
+        i++;
+      }
+
+      return {
+        pathArray: path,
+        lastKey: path[path.length - 1],
+        value: object
+      };
+    };
   /**
    * @module Butter.helpers
    */
@@ -33,6 +60,37 @@ define(function(require, exports, module) {
       }
       return this.clone(destination);
     },
+    isEmpty: function(value) {
+      if (this.isObject) {
+        return JSON.stringify(value).length === 2;
+      } else {
+        return value.length === 0;
+      }
+    },
+    difference: function(value1, value2, recursive) {
+      var self = this,
+        result = false;
+
+      if (!this.isEqual(value1, value2)) {
+        result = value1;
+        if (this.isArray(value1)) {
+          result = [];
+          this.each(value1, function(value) {
+            if (!self.contains(value2, value)) {
+              result.push(value);
+            }
+          });
+        } else if (this.isObject(value1)) {
+          result = {};
+          this.each(value1, function(key, value) {
+            if (!value2[key]) {
+              result[key] = value;
+            }
+          });
+        }
+      }
+      return result;
+    },
     clone: function(obj) {
       if (obj) {
         return JSON.parse(JSON.stringify(obj));
@@ -40,73 +98,72 @@ define(function(require, exports, module) {
         return {};
       }
     },
-    indexOf: function(element, array) {
-      if (_indexOf) {
-        return _indexOf.call(array, element);
+    contains: function(array, value) {
+      return !!~this.indexOf(array, value);
+    },
+    indexOf: function(array, value) {
+      var result = -1,
+        i = 0,
+        arrayLength = array.length;
+
+      if (this.isObject(value)) {
+        for (; i < arrayLength; i++) {
+          if (this.isEqual(array[i], value)) {
+            result = array[i];
+            break;
+          }
+        }
+        return result;
       } else {
-        return $.inArray(element, array);
+        if (_indexOf) {
+          return _indexOf.call(array, value);
+        } else {
+          return Bacon._.indexOf(array, value);
+        }
       }
     },
     each: function(iterator, callback, context) {
       var self = this;
-      if (_each) {
-        return _each.call(iterator, context ? this.bind(callback, context) : callback);
+
+      context = context ? this.bind(callback, context) : callback.prototype;
+
+      if (_each && _keys) {
+        if (this.isObject(iterator)) {
+          _each.call(_keys(iterator), function(key) {
+            callback.apply(context, [key, iterator[key]]);
+          });
+        } else {
+          return _each.apply(iterator, context);
+        }
       } else {
-        return $.each(iterator, function(i, elm) {
-          if (context) {
-            self.bind(callback, context, elm, i);
-          } else {
-            callback(elm, i);
-          }
+        return $.each(iterator, function(i, element) {
+          callback.apply(context, [element, i]);
         });
       }
     },
-    bind: function(f, c) {
+    bind: function(func, context) {
       return function() {
-        return f.apply(c, arguments);
+        return func.apply(context, arguments);
       };
     },
     isEqual: function(value1, value2) {
       return JSON.stringify(value1) === JSON.stringify(value2);
     },
-    getObjectValueByPath: function(obj, path) {
-      var keys, keyLen, i = 0,
-        key,
-        value = obj;
-
-      keys = path && path.split('.');
-      keyLen = keys && keys.length;
-
-      while (i < keyLen && value) {
-        key = keys[i];
-        value = value[key];
-        i++;
-      }
-
-      if (i < keyLen) {
-        value = null;
-      }
-
-      return value;
+    getObjectValueByPath: function(object, path) {
+      var result = _parseObjectByPath(object, path);
+      return result.value[result.lastKey];
     },
-    setObjectValueByPath: function(obj, path, value) {
 
-      path = path.split('.');
+    setObjectValueByPath: function(object, path, value) {
 
-      for (var i = 0; i < path.length - 1; i++) {
-        if (!obj[path[i]]) {
-          return false;
-        } else {
-          obj = obj[path[i]];
-        }
-      }
+      var result = _parseObjectByPath(object, path);
 
       if (value !== null && value !== undefined) {
-        obj[path[i]] = value;
-        return true;
+        result.value[result.lastKey] = value;
+        return result.value;
       } else {
-        obj[path[i]] = null;
-        delete obj[path[i]];
+        result.value[result.lastKey] = null;
+        delete result.value[result.lastKey];
         return true;
       }
 

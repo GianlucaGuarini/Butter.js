@@ -9,7 +9,8 @@ define(function(require, exports, module) {
       destroyModelsCreated: true
     },
     data: {
-      maxStatesLength: 10
+      maxStatesLength: 10,
+      emulateHTTP: true
     }
   };
 });
