@@ -8,7 +8,8 @@
 
   <div id="test">
     <img src="https://lh6.ggpht.com/39_B6yP5j4aXPq6oXgmpWrpoLBbi-uHha_jHhTzkwtzDpUxDEwMRKZFex2bRLbjRe81r_Z0k0xyXmrbgb6PTXOZxFpxtfeB6b38h7G3GIg=s660" />
-    <input type="text" data-value="myVal" />
+    <input type="text" data-value="value.1.name" />
+    <span data-text="value.1.name"></span>
   </div>
 
   <!-- Vendor -->
@@ -41,12 +42,12 @@
       }
     }),
       model = view.data;
-    view.state.log();
-    model.listen('value.0.name');
-    model.changes.onEnd(function(){
-      console.log('bye');
-    });
+
     view.render();
+
+
+    //view.unbind();
+
     model.set({
       value: [{
         name: 'me'
@@ -55,11 +56,12 @@
       }]
     });
 
-    console.log(model.changes);
+
 
     //view.onPointerMove.log();
     //view.onPointerDown.log();
-    //view.remove();
+
+
   </script>
   </body>
 </html>

@@ -13,8 +13,7 @@ define(function(require, exports, module) {
      * Private stuff
      * @private
      */
-    var __currentStateIndex = 0,
-      __initialValues = null;
+    var __currentStateIndex = 0;
 
     /**
      * @private
@@ -37,7 +36,7 @@ define(function(require, exports, module) {
       // set the initial data
       if (_.isObject(initialValues) || _.isArray(initialValues)) {
         this.set(initialValues);
-        __initialValues = this.get();
+        initialValues = this.get();
       }
 
       return this;
@@ -173,6 +172,10 @@ define(function(require, exports, module) {
         dataType: 'json'
       }, options));
 
+      ajax.always(
+        _.bind(this.events.push, this, 'sync')
+      );
+
       ajax.then(
         _.bind(function(data) {
           if (httpVerb === 'GET') {
@@ -181,9 +184,10 @@ define(function(require, exports, module) {
             this.events.push(method);
           }
         }, this),
-        _.bind(this.events.error, this),
-        _.bind(this.events.push, this, 'sync')
-      );
+        _.bind(this.events.error, this));
+
+
+
       return ajax;
     };
     /**
@@ -220,7 +224,6 @@ define(function(require, exports, module) {
         // update the deep value or return false
         mustUpdate = _.setObjectValueByPath(attributes, arguments[0], arguments[1]);
       } else {
-
         // update or add new values
         if (_.isObject(attributes)) {
           _.extend(attributes, arguments[0]);
@@ -257,7 +260,7 @@ define(function(require, exports, module) {
      * @public
      */
     this.reset = function() {
-      this.update(__initialValues, 'reset');
+      this.update(initialValues, 'reset');
 
       return this;
     };
@@ -272,7 +275,6 @@ define(function(require, exports, module) {
     this.add = function(item, path, at) {
       var array = _.isString(path) ? this.get(path) : this.get();
       if (!_.isArray(array)) {
-        console.log(array);
         throw new Error('You cannot push new data in an element that is not an array');
       } else {
 

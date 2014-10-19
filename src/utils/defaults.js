@@ -6,7 +6,10 @@ define(function(require, exports, module) {
   module.exports = {
     view: {
       binderSelector: 'data-',
-      destroyModelsCreated: true
+      destroyModelsCreated: true,
+      tagName: 'div',
+      id: null,
+      className: null
     },
     data: {
       maxStatesLength: 10,

@@ -4,6 +4,7 @@ define(function(require, exports, module) {
    * @module Butter.View
    */
   var _ = require('./utils/helpers'),
+    binders = require('./utils/binders'),
     defaults = require('./utils/defaults'),
     mixins = require('./utils/mixins');
 
@@ -18,35 +19,38 @@ define(function(require, exports, module) {
       _.extend(this, mixins);
       // getting some useful options shared between any view class
       _.extend(this, defaults.view);
+      // extend this view with the options passed to its instance
+      _.extend(this, options || {});
 
-      this.bindings = [];
+      this.binders = [];
       this.views = [];
-      this.template = options.template;
       this.destroyDataOnRemove = false;
       // Special property representing the state of the current view
       this.state = new Bacon.Bus();
 
-      // Extend this view with some other custom events passed via options
-      _.each(options, function(key, value) {
-        if (typeof value === 'function') {
-          this[key] = value;
-        } else if (key === 'data') {
-          if (value instanceof Butter.Data) {
-            this[key] = value;
-          } else {
-            this[key] = new Butter.Data(value);
-            if (this.destroyDatasCreated) {
-              this.destroyDataOnRemove = true;
-            }
-          }
-        }
-      }, this);
-
-      if (options.el) {
-        this.setElement(options.el);
-      }
+      this.setData(this.data);
+      this.setElement(this.el);
 
       this.state.onValue(_.bind(this.exec, this));
+
+      return this;
+    };
+
+    /**
+     * Extend this class with the options passed to its instance
+     */
+    this.setData = function(data) {
+
+      if (!options) return this;
+
+      if (data && data instanceof Butter.Data) {
+        this.data = data;
+      } else {
+        this.data = new Butter.Data();
+        if (this.destroyDatasCreated) {
+          this.destroyDataOnRemove = true;
+        }
+      }
 
       return this;
     };
@@ -56,11 +60,25 @@ define(function(require, exports, module) {
      * @public
      */
     this.setElement = function(el) {
-      this.$el = el instanceof _.$ ? options.el : _.$(el);
-      this.el = this.$el[0];
-      if (!this.el) {
-        console.warn(options.el + 'was not found!');
+
+      var attributes = {};
+      if (el) {
+        this.$el = el instanceof _.$ ? options.el : _.$(el);
+      } else {
+        this.$el = $('<' + this.tagName + '>');
       }
+
+      this.el = this.$el[0];
+
+      if (this.className) {
+        attributes['class'] = this.className;
+      }
+      if (this.id) {
+        attributes.id = this.id;
+      }
+
+      this.$el.attr(attributes);
+
       return this;
     };
 
@@ -96,12 +114,16 @@ define(function(require, exports, module) {
      */
     this.unbind = function() {
       this.$el.off();
-      _.each(options.events, function(i, event) {
+      _.each(this.events, function(i, event) {
         if (this[event.name]) {
           this[event.name].onValue()();
           this[event.name] = null;
         }
       }, this);
+      _.each(this.binders, function(binder) {
+        binder.unbind();
+      }, this);
+      this.binders = [];
       return this;
     };
 
@@ -110,19 +132,32 @@ define(function(require, exports, module) {
      * @public
      */
     this.bind = function() {
+      var self = this;
       this.unbind();
       // Bind the view events
-      _.each(options.events, function(event, i) {
-        this[event.name] = this.$el.asEventStream(event.type, event.el);
+      _.each(this.events, function(event, i) {
+        if (event.name) {
+          this[event.name] = this.$el.asEventStream(event.type, event.el);
+        } else {
+          throw new Error('You must specify an event name for each event assigned to this view');
+        }
+      }, this);
+
+      // Set the DOM binders parsing the view html
+      _.each(binders, function(binderType) {
+        var selector = this.binderSelector + binderType;
+        this.$('[' + selector + ']').each(function() {
+          var $el = $(this),
+            binder = binders[binderType]($el, self.data, $el.attr(selector));
+          self.binders.push(binder);
+          binder.bind();
+        });
       }, this);
       // Bind the markup binders
       //_.each(this.$('*', this.$el), this.parse, this);
       return this;
     };
 
-    this.parse = function(i, el) {
-
-    };
     /**
      * Remove this view its subViews and all the events
      */
@@ -135,7 +170,9 @@ define(function(require, exports, module) {
       if (this.destroyDataOnRemove) {
         this.model.destroy();
       }
-      this.$el.remove();
+      if (this.$el) {
+        this.$el.remove();
+      }
       this.removeProperties();
     };
 

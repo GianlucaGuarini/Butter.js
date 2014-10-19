@@ -10,7 +10,8 @@ define(function(require, exports, module) {
      * @public
      */
     extend: function(properties) {
-      return _.extend(this, properties);
+      _.extend(this, properties);
+      return this;
     },
     /**
      * Executes any method of the current class only if it exists

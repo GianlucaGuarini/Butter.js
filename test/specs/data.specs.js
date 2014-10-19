@@ -25,7 +25,7 @@ define(function(require) {
       foods = new Data([]);
     });
 
-    it('It can be created and setup correctly', function() {
+    it('constructor', function() {
 
       expect(food.state).to.be.an('array');
       expect(food.changes).to.be.a(Bacon.Bus);
@@ -33,16 +33,16 @@ define(function(require) {
 
     });
 
-    it('"get" method', function() {
-      // get
+    it('get', function() {
+
       expect(food.get('name')).to.be.equal('bagel');
       expect(food.get('ingredients.sweet')).to.be.equal('sugar');
       expect(food.get('ingredients.secretIngredients.0.theyCallIt')).to.be.equal('love');
       expect(food.get('ingredients.sweet')).to.be.equal('sugar');
     });
 
-    it('"set" method', function() {
-      // set
+    it('set', function() {
+
       food.set('mushroom', '1up');
       expect(food.get('mushroom')).to.be.equal('1up');
       food.set({
@@ -52,8 +52,8 @@ define(function(require) {
       expect(food.get('mushroom')).to.be.equal('1down');
     });
 
-    it('"unset" method', function() {
-      // unset
+    it('unset', function() {
+
       food.unset('ingredients.secretIngredients');
       expect(food.get('secretIngredients')).to.be(undefined);
       expect(food.toString()).to.be.equal(JSON.stringify({
@@ -64,8 +64,8 @@ define(function(require) {
       }));
     });
 
-    it('"reset" method', function() {
-      // reset
+    it('reset', function() {
+
       food.set({
         mushroom: '1down',
         ingredients: 'nope'
@@ -75,7 +75,7 @@ define(function(require) {
     });
 
 
-    it('Its listeners work as expected', function() {
+    it('listen', function() {
       var callback = sinon.spy(),
         listenCallback = sinon.spy(),
         newSecretIngredient = {
@@ -105,7 +105,7 @@ define(function(require) {
 
     });
 
-    it('Its states could be switched with the undo and redo methods', function() {
+    it('redo undo', function() {
       this.timeout(10000);
       food.set('quantity', 4);
       expect(food.get('quantity')).to.be.equal(4);
@@ -153,7 +153,7 @@ define(function(require) {
 
     });
 
-    it('It can be bound to another model', function() {
+    it('bind', function() {
       var food2 = new Data(),
         food3 = new Data(initialData);
       food.bind(food2);
@@ -176,16 +176,16 @@ define(function(require) {
 
     });
 
-    it('The undo and redo methods trigger also the status change events', function() {
+    it('on', function() {
       var callback = sinon.spy();
-      food.events.onValue(callback);
+      food.on('set undo redo').onValue(callback);
       food.set('name', 'pasta');
       food.undo();
       food.redo();
       expect(callback).was.calledThrice();
     });
 
-    it('The add and remove event work only with array data', function() {
+    it('add', function() {
       foods.add('pasta');
       foods.add('pane');
       foods.add('pizza', null, 1);
@@ -193,13 +193,13 @@ define(function(require) {
       expect(foods.get('1')).to.be.equal('pizza');
     });
 
-    it('The sync methods work with a JSON object', function(done) {
+    it('fetch object', function(done) {
       this.timeout(10000);
       var callback = sinon.spy();
       food.url = window.FIXTURES_URL + 'object.json';
       food.events.onValue(callback);
       food.on('read').onValue(function() {
-        expect(callback).was.calledOnce();
+        expect(callback).was.calledTwice();
         expect(food.get('name')).to.be.equal('pizza');
         done();
       });
@@ -207,14 +207,14 @@ define(function(require) {
 
     });
 
-    it('The sync methods work with a JSON array', function(done) {
+    it('fetch array', function(done) {
 
       this.timeout(10000);
       var callback = sinon.spy();
       food.url = window.FIXTURES_URL + 'array.json';
       food.events.onValue(callback);
       food.on('read').onValue(function() {
-        expect(callback).was.calledOnce();
+        expect(callback).was.calledTwice();
         expect(food.get()).to.be.an('array');
         expect(food.get('length')).to.be.equal(2);
         done();
@@ -223,13 +223,22 @@ define(function(require) {
 
     });
 
-    it('The sync methods throw an error if no url is set', function() {
+    it('sync errors', function(done) {
+      food.events.onError(function() {
+        done();
+      });
       expect(food.fetch).to.throwException();
       expect(food.save).to.throwException();
+      food.url = 'whatever';
+      food.fetch();
     });
 
-    it('It can be returned as string', function() {
+    it('toString', function() {
       expect(food.toString()).to.be.equal(JSON.stringify(initialData));
+    });
+
+    it('errors', function() {
+
     });
 
     afterEach(function() {

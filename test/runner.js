@@ -16,14 +16,16 @@ require([
   '../test/requirejs-config'
 ], function() {
   require([
+    'baconjs',
     'jquery',
-    'baconjs'
+    'butter'
   ], function() {
     require([
       // tests
       '../test/specs/helpers.specs',
       '../test/specs/core.specs',
-      '../test/specs/data.specs'
+      '../test/specs/data.specs',
+      '../test/specs/view.specs'
     ], function() {
 
       var runner;
@@ -65,8 +67,6 @@ require([
           });
         }
       }
-
     });
   });
-
 });

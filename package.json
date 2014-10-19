@@ -36,7 +36,7 @@
     "load-grunt-configs": "*",
     "load-grunt-tasks": "*",
     "mocha": "*",
-    "requirejs": "*",
+    "requirejs": "^2.1.15",
     "simulant": "*",
     "sinon": "*",
     "sinon-expect": "*"

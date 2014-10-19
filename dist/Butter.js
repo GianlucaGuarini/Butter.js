@@ -52,7 +52,12 @@
 (function(root, factory) {
   if (typeof define === 'function' && define.amd) {
     // AMD. Register as an anonymous module.
-    define(['baconjs', 'jquery'], factory);
+    define(['baconjs', 'jquery'], function(Bacon, jQuery) {
+      // Also create a global in case some scripts
+      // that are loaded still are looking for
+      // a global even when an AMD loader is in use.
+      return (root.Butter = factory(Bacon, jQuery));
+    });
   } else if (typeof exports === 'object') {
     // Node. Does not work with strict CommonJS, but
     // only CommonJS-like environments that support module.exports,
@@ -65,6 +70,7 @@
 }(this, function(Bacon, $) {
   var utils_helpers, utils_defaults, utils_mixins, utils_binders, Data, View, Butter, exports;
   utils_helpers = exports = function(exports) {
+
     var _toString = Object.prototype.toString,
       _keys = Object.keys,
       _indexOf = Array.prototype.indexOf,
@@ -125,7 +131,6 @@
           result = value1;
           if (this.isArray(value1)) {
             result = [];
-            console.log(value1);
             this.each(value1, function(value) {
               if (!self.contains(value2, value)) {
                 result.push(value);
@@ -175,7 +180,9 @@
       each: function(iterator, callback, context) {
         var self = this,
           isObject = this.isObject(iterator);
-        context = context ? this.bind(callback, context) : callback.prototype;
+        context = context || callback.prototype;
+        if (!iterator)
+          return;
         if (_each && _keys) {
           if (isObject) {
             _each.call(_keys(iterator), function(key) {
@@ -185,10 +192,10 @@
               ]);
             });
           } else {
-            return _each.apply(iterator, context);
+            _each.call(iterator, this.bind(callback, context));
           }
         } else {
-          return $.each(iterator, function(i, element) {
+          $.each(iterator, function(i, element) {
             callback.apply(context, isObject ? [
               i,
               element
@@ -233,7 +240,10 @@
     exports = {
       view: {
         binderSelector: 'data-',
-        destroyModelsCreated: true
+        destroyModelsCreated: true,
+        tagName: 'div',
+        id: null,
+        className: null
       },
       data: {
         maxStatesLength: 10,
@@ -250,7 +260,8 @@
      */
     exports = {
       extend: function(properties) {
-        return _.extend(this, properties);
+        _.extend(this, properties);
+        return this;
       },
       exec: function(callback) {
         if (typeof this[callback] === 'function') {
@@ -268,24 +279,42 @@
   }({});
   utils_binders = function(exports) {
 
+    var _ = utils_helpers;
     exports = {
       'text': function($el, data, path) {
+        var listener;
         return {
-          set: function(value) {
-            data.listen(path).onValue($el, 'text');
+          set: function() {
+            listener = data.listen(path).onValue($el, 'text');
+          },
+          bind: function() {
+            this.set();
+          },
+          unbind: function() {
+            listener();
           }
         };
       },
-      'val': function($el, data, path) {
+      'value': function($el, data, path) {
+        var listeners = [],
+          events = $el.asEventStream('keydown');
         return {
-          events: function() {
-            var changes = $el.asEventStream('change');
-          },
           get: function() {
-            return $el.val();
+            listeners.push(events.map(function() {
+              return $el.val();
+            }).assign(data, 'set', path));
           },
-          set: function(value) {
-            $el.val(value);
+          set: function() {
+            listeners.push(data.listen(path).assign($el, 'val'));
+          },
+          bind: function() {
+            this.set();
+            this.get();
+          },
+          unbind: function() {
+            _.each(listeners, function(listener) {
+              listener();
+            });
           }
         };
       }
@@ -298,8 +327,7 @@
       defaults = utils_defaults,
       mixins = utils_mixins;
     exports = function(initialValues) {
-      var __currentStateIndex = 0,
-        __initialValues = null;
+      var __currentStateIndex = 0;
       this._constructor = function() {
         _.extend(this, mixins);
         _.extend(this, defaults.data);
@@ -309,7 +337,7 @@
         this.isNew = true;
         if (_.isObject(initialValues) || _.isArray(initialValues)) {
           this.set(initialValues);
-          __initialValues = this.get();
+          initialValues = this.get();
         }
         return this;
       };
@@ -390,13 +418,14 @@
           data: httpVerb === 'GET' ? null : JSON.stringify(data),
           dataType: 'json'
         }, options));
+        ajax.always(_.bind(this.events.push, this, 'sync'));
         ajax.then(_.bind(function(data) {
           if (httpVerb === 'GET') {
             this.update(data, 'read');
           } else {
             this.events.push(method);
           }
-        }, this), _.bind(this.events.error, this), _.bind(this.events.push, this, 'sync'));
+        }, this), _.bind(this.events.error, this));
         return ajax;
       };
       this.fetch = function(options) {
@@ -431,13 +460,12 @@
         return this;
       };
       this.reset = function() {
-        this.update(__initialValues, 'reset');
+        this.update(initialValues, 'reset');
         return this;
       };
       this.add = function(item, path, at) {
         var array = _.isString(path) ? this.get(path) : this.get();
         if (!_.isArray(array)) {
-          console.log(array);
           throw new Error('You cannot push new data in an element that is not an array');
         } else {
           array.splice(at || array.length, 0, item);
@@ -559,43 +587,51 @@
   View = function(exports) {
 
     var _ = utils_helpers,
+      binders = utils_binders,
       defaults = utils_defaults,
       mixins = utils_mixins;
     exports = function(options) {
       this._constructor = function() {
         _.extend(this, mixins);
         _.extend(this, defaults.view);
-        this.bindings = [];
+        _.extend(this, options || {});
+        this.binders = [];
         this.views = [];
-        this.template = options.template;
         this.destroyDataOnRemove = false;
         this.state = new Bacon.Bus();
-        _.each(options, function(key, value) {
-          if (typeof value === 'function') {
-            this[key] = value;
-          } else if (key === 'data') {
-            if (value instanceof Butter.Data) {
-              this[key] = value;
-            } else {
-              this[key] = new Butter.Data(value);
-              if (this.destroyDatasCreated) {
-                this.destroyDataOnRemove = true;
-              }
-            }
-          }
-        }, this);
-        if (options.el) {
-          this.setElement(options.el);
-        }
+        this.setData(this.data);
+        this.setElement(this.el);
         this.state.onValue(_.bind(this.exec, this));
         return this;
       };
-      this.setElement = function(el) {
-        this.$el = el instanceof _.$ ? options.el : _.$(el);
-        this.el = this.$el[0];
-        if (!this.el) {
-          console.warn(options.el + 'was not found!');
+      this.setData = function(data) {
+        if (!options)
+          return this;
+        if (data && data instanceof Butter.Data) {
+          this.data = data;
+        } else {
+          this.data = new Butter.Data();
+          if (this.destroyDatasCreated) {
+            this.destroyDataOnRemove = true;
+          }
         }
+        return this;
+      };
+      this.setElement = function(el) {
+        var attributes = {};
+        if (el) {
+          this.$el = el instanceof _.$ ? options.el : _.$(el);
+        } else {
+          this.$el = $('<' + this.tagName + '>');
+        }
+        this.el = this.$el[0];
+        if (this.className) {
+          attributes['class'] = this.className;
+        }
+        if (this.id) {
+          attributes.id = this.id;
+        }
+        this.$el.attr(attributes);
         return this;
       };
       this.$ = function(selector) {
@@ -611,29 +647,48 @@
       };
       this.unbind = function() {
         this.$el.off();
-        _.each(options.events, function(i, event) {
+        _.each(this.events, function(i, event) {
           if (this[event.name]) {
             this[event.name].onValue()();
             this[event.name] = null;
           }
         }, this);
+        _.each(this.binders, function(binder) {
+          binder.unbind();
+        }, this);
+        this.binders = [];
         return this;
       };
       this.bind = function() {
+        var self = this;
         this.unbind();
-        _.each(options.events, function(event, i) {
-          this[event.name] = this.$el.asEventStream(event.type, event.el);
+        _.each(this.events, function(event, i) {
+          if (event.name) {
+            this[event.name] = this.$el.asEventStream(event.type, event.el);
+          } else {
+            throw new Error('You must specify an event name for each event assigned to this view');
+          }
+        }, this);
+        _.each(binders, function(binderType) {
+          var selector = this.binderSelector + binderType;
+          this.$('[' + selector + ']').each(function() {
+            var $el = $(this),
+              binder = binders[binderType]($el, self.data, $el.attr(selector));
+            self.binders.push(binder);
+            binder.bind();
+          });
         }, this);
         return this;
       };
-      this.parse = function(i, el) {};
       this.remove = function() {
         this.state.push('beforeRemove');
         this.state.end();
         if (this.destroyDataOnRemove) {
           this.model.destroy();
         }
-        this.$el.remove();
+        if (this.$el) {
+          this.$el.remove();
+        }
         this.removeProperties();
       };
       return this._constructor();
@@ -652,5 +707,6 @@
     };
     return exports;
   }({});
+
   return Butter;
 }));

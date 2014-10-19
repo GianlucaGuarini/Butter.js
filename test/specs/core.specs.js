@@ -1,4 +1,5 @@
 define(function(require) {
+
   var Butter = require('butter');
 
   describe('Core', function() {

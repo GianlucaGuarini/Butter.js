@@ -1,5 +1,6 @@
 define(function(require, exports, module) {
   'use strict';
+  var _ = require('../utils/helpers');
   /**
    * @module Butter.binders
    */
@@ -9,29 +10,47 @@ define(function(require, exports, module) {
      * [data-text] binder
      */
     'text': function($el, data, path) {
+      var listener;
       return {
-        set: function(value) {
-          data
+        set: function() {
+          listener = data
             .listen(path)
             .onValue($el, 'text');
+        },
+        bind: function() {
+          this.set();
+        },
+        unbind: function() {
+          listener();
         }
       };
     },
     /**
      * To bind the value of any text input
-     * [data-val] binder
+     * [data-value] binder
      */
-    'val': function($el, data, path) {
+    'value': function($el, data, path) {
+      var listeners = [],
+        events = $el.asEventStream('keydown');
       return {
-        events: function() {
-          var changes = $el.asEventStream('change');
-          //data.changes.plug(changes.map())
-        },
         get: function() {
-          return $el.val();
+          listeners.push(
+            events.map(function() {
+              return $el.val();
+            }).assign(data, 'set', path)
+          );
         },
-        set: function(value) {
-          $el.val(value);
+        set: function() {
+          listeners.push(data.listen(path).assign($el, 'val'));
+        },
+        bind: function() {
+          this.set();
+          this.get();
+        },
+        unbind: function() {
+          _.each(listeners, function(listener) {
+            listener();
+          });
         }
       };
     }
