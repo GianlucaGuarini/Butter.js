@@ -21,7 +21,11 @@ define(function(require, exports, module) {
 
       while (i < keyLength - 1) {
         key = path[i];
+
+        if (!object[key]) return;
+
         object = object[key];
+
         i++;
       }
 
@@ -40,7 +44,7 @@ define(function(require, exports, module) {
       return typeof value === 'boolean';
     },
     isObject: function(value) {
-      return _toString.call(value) === '[object Object]';
+      return _toString.call(value) === '[object Object]' && !this.isUndefined(value);
     },
     isString: function(value) {
       return typeof value === 'string';
@@ -154,12 +158,15 @@ define(function(require, exports, module) {
     },
     getObjectValueByPath: function(object, path) {
       var result = _parseObjectByPath(object, path);
+      if (!result || !result.value) return;
       return result.value[result.lastKey];
     },
 
     setObjectValueByPath: function(object, path, value) {
 
       var result = _parseObjectByPath(object, path);
+
+      if (!result || !result.value) return;
 
       if (value !== null && value !== undefined) {
         result.value[result.lastKey] = value;

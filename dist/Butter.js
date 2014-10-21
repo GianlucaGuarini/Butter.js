@@ -82,6 +82,8 @@
         keyLength = path && path.length;
         while (i < keyLength - 1) {
           key = path[i];
+          if (!object[key])
+            return;
           object = object[key];
           i++;
         }
@@ -97,7 +99,7 @@
         return typeof value === 'boolean';
       },
       isObject: function(value) {
-        return _toString.call(value) === '[object Object]';
+        return _toString.call(value) === '[object Object]' && !this.isUndefined(value);
       },
       isString: function(value) {
         return typeof value === 'string';
@@ -216,10 +218,14 @@
       },
       getObjectValueByPath: function(object, path) {
         var result = _parseObjectByPath(object, path);
+        if (!result || !result.value)
+          return;
         return result.value[result.lastKey];
       },
       setObjectValueByPath: function(object, path, value) {
         var result = _parseObjectByPath(object, path);
+        if (!result || !result.value)
+          return;
         if (value !== null && value !== undefined) {
           result.value[result.lastKey] = value;
           return result.value;
@@ -297,12 +303,13 @@
       },
       'value': function($el, data, path) {
         var listeners = [],
-          events = $el.asEventStream('keydown');
+          events = $el.asEventStream('keydown change copy paste input');
         return {
           get: function() {
             listeners.push(events.map(function() {
               return $el.val();
-            }).assign(data, 'set', path));
+            }).debounce(50).assign(data, 'set', path));
+            data.set(path, $el.val());
           },
           set: function() {
             listeners.push(data.listen(path).assign($el, 'val'));
@@ -335,9 +342,8 @@
         this.changes = new Bacon.Bus();
         this.events = new Bacon.Bus();
         this.isNew = true;
-        if (_.isObject(initialValues) || _.isArray(initialValues)) {
+        if (!_.isUndefined(initialValues)) {
           this.set(initialValues);
-          initialValues = this.get();
         }
         return this;
       };
@@ -353,12 +359,14 @@
       };
       this.get = function(path) {
         var currentState = this.state[__currentStateIndex];
-        if (!currentState) {
-          return initialValues || {};
+        if (_.isUndefined(currentState)) {
+          return undefined;
         } else if (_.isString(path)) {
           return _.getObjectValueByPath(currentState.attributes, path);
-        } else {
+        } else if (_.isObject(currentState.attributes) || _.isArray(currentState.attributes)) {
           return _.clone(currentState.attributes);
+        } else {
+          return currentState.attributes;
         }
       };
       this.parse = function(data) {
@@ -435,15 +443,16 @@
         return this.sync('save', options);
       };
       this.set = function() {
-        var attributes = this.get(),
+        var args = arguments,
+          attributes = this.get(),
           mustUpdate = false;
-        if (_.isString(arguments[0])) {
-          mustUpdate = _.setObjectValueByPath(attributes, arguments[0], arguments[1]);
+        if (args.length === 2 && _.isString(args[0])) {
+          mustUpdate = _.setObjectValueByPath(attributes, args[0], args[1]);
         } else {
           if (_.isObject(attributes)) {
-            _.extend(attributes, arguments[0]);
+            _.extend(attributes, args[0]);
           } else {
-            attributes = arguments[0];
+            attributes = args[0];
           }
           mustUpdate = true;
         }
@@ -454,9 +463,12 @@
       };
       this.unset = function(path) {
         var attributes = this.get();
-        if (path && _.setObjectValueByPath(attributes, path, null)) {
-          this.update(attributes, 'unset');
+        if (path) {
+          _.setObjectValueByPath(attributes, path, null);
+        } else {
+          attributes = undefined;
         }
+        this.update(attributes, 'unset');
         return this;
       };
       this.reset = function() {
@@ -549,7 +561,11 @@
         return this;
       };
       this.listen = function(path) {
-        return this.changes.map('.' + path).skipDuplicates(_.isEqual);
+        if (path) {
+          return this.changes.map('.' + path).skipDuplicates(_.isEqual);
+        } else {
+          return this.changes.skipDuplicates();
+        }
       };
       this.on = function(method) {
         return this.events.filter(function(event) {
@@ -610,7 +626,7 @@
         if (data && data instanceof Butter.Data) {
           this.data = data;
         } else {
-          this.data = new Butter.Data();
+          this.data = new Butter.Data(this.data);
           if (this.destroyDatasCreated) {
             this.destroyDataOnRemove = true;
           }
@@ -640,7 +656,7 @@
       this.render = function() {
         this.state.push('beforeRender');
         if (this.template) {
-          this.$el.html(this.template);
+          this.$el.html(_.isFunction(this.template) ? this.template(this.data.get()) : this.template);
         }
         this.bind().state.push('afterRender');
         return this;

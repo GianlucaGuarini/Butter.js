@@ -10,6 +10,7 @@ define(function(require) {
   describe('Butter.Data', function() {
     var food,
       foods,
+      empty,
       initialData = {
         name: 'bagel',
         ingredients: {
@@ -23,6 +24,7 @@ define(function(require) {
     beforeEach(function() {
       food = new Data(initialData);
       foods = new Data([]);
+      empty = new Data();
     });
 
     it('constructor', function() {
@@ -39,6 +41,8 @@ define(function(require) {
       expect(food.get('ingredients.sweet')).to.be.equal('sugar');
       expect(food.get('ingredients.secretIngredients.0.theyCallIt')).to.be.equal('love');
       expect(food.get('ingredients.sweet')).to.be.equal('sugar');
+      expect(empty.get()).to.be(undefined);
+
     });
 
     it('set', function() {
@@ -49,7 +53,10 @@ define(function(require) {
         mushroom: '1down',
         ingredients: 'nope'
       });
+      empty.set('foo');
       expect(food.get('mushroom')).to.be.equal('1down');
+      expect(empty.get()).to.be.equal('foo');
+
     });
 
     it('unset', function() {
@@ -62,6 +69,11 @@ define(function(require) {
           sweet: 'sugar'
         }
       }));
+
+      empty.set('foo');
+      empty.unset();
+      expect(empty.get()).to.be(undefined);
+
     });
 
     it('reset', function() {
@@ -70,12 +82,21 @@ define(function(require) {
         mushroom: '1down',
         ingredients: 'nope'
       });
+
       food.reset();
+
       expect(food.toString()).to.be.equal(JSON.stringify(initialData));
+
+      empty.set('foo');
+      empty.reset();
+      expect(empty.get()).to.be(undefined);
+
+
     });
 
 
     it('listen', function() {
+
       var callback = sinon.spy(),
         listenCallback = sinon.spy(),
         newSecretIngredient = {
@@ -99,13 +120,13 @@ define(function(require) {
 
       food.unset('ingredients.secretIngredients');
 
-      expect(listenCallback).was.callCount(3);
+      expect(listenCallback).was.callCount(2);
       expect(callback).was.callCount(5);
-
 
     });
 
     it('redo undo', function() {
+
       this.timeout(10000);
       food.set('quantity', 4);
       expect(food.get('quantity')).to.be.equal(4);
@@ -154,6 +175,7 @@ define(function(require) {
     });
 
     it('bind', function() {
+
       var food2 = new Data(),
         food3 = new Data(initialData);
       food.bind(food2);
@@ -177,23 +199,28 @@ define(function(require) {
     });
 
     it('on', function() {
+
       var callback = sinon.spy();
       food.on('set undo redo').onValue(callback);
       food.set('name', 'pasta');
       food.undo();
       food.redo();
       expect(callback).was.calledThrice();
+
     });
 
     it('add', function() {
+
       foods.add('pasta');
       foods.add('pane');
       foods.add('pizza', null, 1);
       expect(foods.length).to.be.equal(3);
       expect(foods.get('1')).to.be.equal('pizza');
+
     });
 
     it('fetch object', function(done) {
+
       this.timeout(10000);
       var callback = sinon.spy();
       food.url = window.FIXTURES_URL + 'object.json';
@@ -224,17 +251,20 @@ define(function(require) {
     });
 
     it('sync errors', function(done) {
+      this.timeout(10000);
+      expect(food.fetch).to.throwException();
+      expect(food.save).to.throwException();
       food.events.onError(function() {
         done();
       });
-      expect(food.fetch).to.throwException();
-      expect(food.save).to.throwException();
       food.url = 'whatever';
       food.fetch();
     });
 
     it('toString', function() {
+
       expect(food.toString()).to.be.equal(JSON.stringify(initialData));
+
     });
 
     it('errors', function() {
@@ -243,6 +273,7 @@ define(function(require) {
 
     afterEach(function() {
       food.destroy();
+      empty.destroy();
     });
 
   });

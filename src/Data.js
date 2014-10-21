@@ -34,9 +34,8 @@ define(function(require, exports, module) {
       this.isNew = true;
 
       // set the initial data
-      if (_.isObject(initialValues) || _.isArray(initialValues)) {
+      if (!_.isUndefined(initialValues)) {
         this.set(initialValues);
-        initialValues = this.get();
       }
 
       return this;
@@ -70,16 +69,17 @@ define(function(require, exports, module) {
     this.get = function(path) {
 
       var currentState = this.state[__currentStateIndex];
-      // check if this class data have been set at least once
-      // by checking its current state
-      if (!currentState) {
-        return initialValues || {};
+
+      if (_.isUndefined(currentState)) {
+        return undefined;
       } else if (_.isString(path)) {
         // get an internal property of this class
         return _.getObjectValueByPath(currentState.attributes, path);
-      } else {
+      } else if (_.isObject(currentState.attributes) || _.isArray(currentState.attributes)) {
         // return the all class attributes by cloning them in a new object
         return _.clone(currentState.attributes);
+      } else {
+        return currentState.attributes;
       }
     };
     /**
@@ -214,21 +214,23 @@ define(function(require, exports, module) {
      * @public
      */
     this.set = function() {
+
       // get all the current class attributes
-      var attributes = this.get(),
+      var args = arguments,
+        attributes = this.get(),
         // assuming we don't need to update this
         mustUpdate = false;
 
       // do we need to update a deep property?
-      if (_.isString(arguments[0])) {
+      if (args.length === 2 && _.isString(args[0])) {
         // update the deep value or return false
-        mustUpdate = _.setObjectValueByPath(attributes, arguments[0], arguments[1]);
+        mustUpdate = _.setObjectValueByPath(attributes, args[0], args[1]);
       } else {
         // update or add new values
         if (_.isObject(attributes)) {
-          _.extend(attributes, arguments[0]);
+          _.extend(attributes, args[0]);
         } else {
-          attributes = arguments[0];
+          attributes = args[0];
         }
         mustUpdate = true;
       }
@@ -249,9 +251,13 @@ define(function(require, exports, module) {
 
       var attributes = this.get();
       // update only if the nested property has been found
-      if (path && _.setObjectValueByPath(attributes, path, null)) {
-        this.update(attributes, 'unset');
+      if (path) {
+        _.setObjectValueByPath(attributes, path, null);
+      } else {
+        attributes = undefined;
       }
+
+      this.update(attributes, 'unset');
 
       return this;
     };
@@ -348,8 +354,6 @@ define(function(require, exports, module) {
 
       }
 
-
-
       this.events.push(method);
 
       return this;
@@ -399,8 +403,12 @@ define(function(require, exports, module) {
      * @public
      */
     this.listen = function(path) {
-      return this.changes.map('.' + path)
-        .skipDuplicates(_.isEqual);
+      if (path) {
+        return this.changes.map('.' + path)
+          .skipDuplicates(_.isEqual);
+      } else {
+        return this.changes.skipDuplicates();
+      }
     };
 
     /**

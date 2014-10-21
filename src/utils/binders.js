@@ -31,14 +31,15 @@ define(function(require, exports, module) {
      */
     'value': function($el, data, path) {
       var listeners = [],
-        events = $el.asEventStream('keydown');
+        events = $el.asEventStream('keydown change copy paste input');
       return {
         get: function() {
           listeners.push(
             events.map(function() {
               return $el.val();
-            }).assign(data, 'set', path)
+            }).debounce(50).assign(data, 'set', path)
           );
+          data.set(path, $el.val());
         },
         set: function() {
           listeners.push(data.listen(path).assign($el, 'val'));

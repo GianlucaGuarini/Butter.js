@@ -3,13 +3,22 @@
 <head>
   <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
   <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  <script src="//cdnjs.cloudflare.com/ajax/libs/json2/20130526/json2.js"></script>
 </head>
 <body>
 
   <div id="test">
-    <img src="https://lh6.ggpht.com/39_B6yP5j4aXPq6oXgmpWrpoLBbi-uHha_jHhTzkwtzDpUxDEwMRKZFex2bRLbjRe81r_Z0k0xyXmrbgb6PTXOZxFpxtfeB6b38h7G3GIg=s660" />
-    <input type="text" data-value="value.1.name" />
-    <span data-text="value.1.name"></span>
+    <input value="ciao" type="text" data-value="value.1.name" />
+    <p data-text="value.1.name"></p>
+    <p data-text="value.1.name"></p>
+    <p data-text="value.1.name"></p>
+    <p data-text="value.1.name"></p>
+    <p data-text="value.1.name"></p>
+    <p data-text="value.1.name"></p>
+    <p data-text="value.1.name"></p>
+    <p data-text="value.1.name"></p>
+    <p data-text="value.1.name"></p>
+    <p data-text="value.1.name"></p>
   </div>
 
   <!-- Vendor -->
@@ -19,47 +28,50 @@
   <script src="../dist/Butter.js"></script>
   <!-- run mocha -->
   <script>
-    var
-      view = new Butter.View({
-      el: '#test',
-      events:[{
-        type: 'mousemove touchmove',
-        name: 'onPointerMove',
-        el: 'img'
-      },{
-        type: 'click touchstart',
-        name: 'onPointerDown',
-        el: 'img'
-      }],
-      data: new Butter.Data({
-        value: 10
+
+      var
+        view = new Butter.View({
+        el: '#test',
+        events:[{
+          type: 'mousemove touchmove',
+          name: 'onPointerMove',
+          el: 'img'
+        },{
+          type: 'click touchstart',
+          name: 'onPointerDown',
+          el: 'img'
+        }],
+        data: {
+          value: [{
+            name: 'me'
+          },{
+            name: 'you'
+          }]
+        }
       }),
-      beforeRender: function() {
-        console.log('beforeRender');
-      },
-      afterRender: function() {
-        console.log('afterRender');
-      }
-    }),
-      model = view.data;
+        model = view.data;
 
-    view.render();
+      view.render();
 
 
-    //view.unbind();
+      //view.unbind();
 
-    model.set({
-      value: [{
-        name: 'me'
-      },{
-        name: 'you'
-      }]
-    });
+      // model.set({
+      //   value: [{
+      //     name: 'me'
+      //   },{
+      //     name: 'you'
+      //   }]
+      // });
+      //
+      //model.changes.log();
 
 
 
-    //view.onPointerMove.log();
-    //view.onPointerDown.log();
+      //view.onPointerMove.log();
+      //view.onPointerDown.log();
+
+
 
 
   </script>

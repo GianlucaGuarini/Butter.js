@@ -46,7 +46,7 @@ define(function(require, exports, module) {
       if (data && data instanceof Butter.Data) {
         this.data = data;
       } else {
-        this.data = new Butter.Data();
+        this.data = new Butter.Data(this.data);
         if (this.destroyDatasCreated) {
           this.destroyDataOnRemove = true;
         }
@@ -98,7 +98,7 @@ define(function(require, exports, module) {
       this.state.push('beforeRender');
 
       if (this.template) {
-        this.$el.html(this.template);
+        this.$el.html(_.isFunction(this.template) ? this.template(this.data.get()) : this.template);
       }
 
       this
