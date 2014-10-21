@@ -22,9 +22,9 @@ require([
   ], function() {
     require([
       // tests
+      '../test/specs/data.specs',
       '../test/specs/helpers.specs',
       '../test/specs/core.specs',
-      '../test/specs/data.specs',
       '../test/specs/view.specs'
     ], function() {
 

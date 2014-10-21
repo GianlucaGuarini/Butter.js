@@ -1,4 +1,4 @@
-![Butter.js logo](https://raw.githubusercontent.com/bagel-framework/Butter.js/master/logos/logo.png)
+#![Butter.js logo](https://raw.githubusercontent.com/bagel-framework/Butter.js/master/logos/logo.png)
 
 Functional Reactive Progamming Javascript Framework
 
@@ -10,5 +10,10 @@ Functional Reactive Progamming Javascript Framework
 [![Sauce Test Status](https://saucelabs.com/browser-matrix/butter.svg)](https://saucelabs.com/u/butter)
 
 Work in progress... stay tuned!
+
+# What is the Functional Reactive Programming?!
+If you don't know what it is the "Functional Reactive Programming" paradigm please check the following video first:
+
+[![An Introduction to Functional Reactive Programming](http://img.youtube.com/vi/ZOCCzDNsAtI/hqdefault.jpg)](https://www.youtube.com/watch?v=ZOCCzDNsAtI)
 
 

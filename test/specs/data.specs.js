@@ -127,7 +127,6 @@ define(function(require) {
 
     it('redo undo', function() {
 
-      this.timeout(10000);
       food.set('quantity', 4);
       expect(food.get('quantity')).to.be.equal(4);
       food.undo();
@@ -221,7 +220,6 @@ define(function(require) {
 
     it('fetch object', function(done) {
 
-      this.timeout(10000);
       var callback = sinon.spy();
       food.url = window.FIXTURES_URL + 'object.json';
       food.events.onValue(callback);
@@ -236,7 +234,6 @@ define(function(require) {
 
     it('fetch array', function(done) {
 
-      this.timeout(10000);
       var callback = sinon.spy();
       food.url = window.FIXTURES_URL + 'array.json';
       food.events.onValue(callback);
@@ -251,14 +248,19 @@ define(function(require) {
     });
 
     it('sync errors', function(done) {
-      this.timeout(10000);
+
       expect(food.fetch).to.throwException();
       expect(food.save).to.throwException();
+
       food.events.onError(function() {
         done();
       });
-      food.url = 'whatever';
-      food.fetch();
+
+      food.url = 'wrong-url';
+      food.fetch({
+        timeout: 1000
+      });
+
     });
 
     it('toString', function() {
@@ -272,6 +274,7 @@ define(function(require) {
     // });
 
     afterEach(function() {
+      food.url = null;
       food.destroy();
       empty.destroy();
     });

@@ -18,7 +18,8 @@
   "browserName": "internet explorer",
   "version": "8",
   "platform": "Windows XP"
-}, {  "browserName": "internet explorer",
+}, {
+  "browserName": "internet explorer",
   "version": "9",
   "platform": "Windows 7"
 }, {
@@ -36,9 +37,19 @@
   "version": "7.1"
 }, {
   "platform": "OS X 10.9",
+  "deviceName": "iPhone",
+  "browserName": "iphone",
+  "version": "8.0"
+}, {
+  "platform": "OS X 10.9",
   "deviceName": "iPad",
   "browserName": "ipad",
   "version": "7.1"
+}, {
+  "platform": "OS X 10.9",
+  "deviceName": "iPad",
+  "browserName": "ipad",
+  "version": "8.0"
 }, {
   "platform": "Linux",
   "deviceName": "Android",
