@@ -267,9 +267,9 @@ define(function(require) {
 
     });
 
-    it('errors', function() {
+    // it('errors', function() {
 
-    });
+    // });
 
     afterEach(function() {
       food.destroy();
