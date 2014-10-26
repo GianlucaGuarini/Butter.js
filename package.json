@@ -38,8 +38,8 @@
     "mocha": "*",
     "requirejs": "^2.1.15",
     "simulant": "*",
-    "sinon": "*",
-    "sinon-expect": "*"
+    "sinon": "1.10.3",
+    "sinon-expect": "0.2.0"
   },
   "author": "Gianluca Guarini (http://gianlucaguarini.com/)",
   "githubUsername": "gianlucaguarini",
