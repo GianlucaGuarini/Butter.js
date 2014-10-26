@@ -128,6 +128,17 @@ define(function(require, exports, module) {
     };
 
     /**
+     * Return an events stream filtering only some of the state triggered by this view
+     * @public
+     */
+
+    this.on = function(method) {
+      return this.state.filter(function(event) {
+        return (_.contains(method.split(' '), event));
+      }).skipDuplicates();
+    };
+
+    /**
      * Delegate the events streams to the child nodes of this view
      * @public
      */
@@ -148,13 +159,15 @@ define(function(require, exports, module) {
         var selector = this.binderSelector + binderType;
         this.$('[' + selector + ']').each(function() {
           var $el = $(this),
-            binder = binders[binderType]($el, self.data, $el.attr(selector));
+            path = $el.attr(selector),
+            binder;
+
+          binder = binders[binderType]($el, self.data, path, self);
           self.binders.push(binder);
           binder.bind();
         });
       }, this);
-      // Bind the markup binders
-      //_.each(this.$('*', this.$el), this.parse, this);
+
       return this;
     };
 
@@ -168,7 +181,7 @@ define(function(require, exports, module) {
        *  Destroy the model created with this view because we assume it's not shared with other views
        */
       if (this.destroyDataOnRemove) {
-        this.model.destroy();
+        this.data.destroy();
       }
       if (this.$el) {
         this.$el.remove();

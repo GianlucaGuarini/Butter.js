@@ -23,6 +23,7 @@ define(function(require, exports, module) {
       _.extend(this, mixins);
       // getting some useful options shared between any Data class
       _.extend(this, defaults.data);
+
       // this array will contain all the values of this class
       // its max length is specified in the Butter.defaults.data
       this.state = [];
@@ -58,7 +59,14 @@ define(function(require, exports, module) {
      * @public
      */
     this.toString = function() {
-      return JSON.stringify(this.get());
+      return JSON.stringify(this.toJSON());
+    };
+    /**
+     * Return this class data as javascript object
+     * @public
+     */
+    this.toJSON = function() {
+      return this.get();
     };
     /**
      * Get any value of this class by a path
@@ -68,19 +76,22 @@ define(function(require, exports, module) {
      */
     this.get = function(path) {
 
-      var currentState = this.state[__currentStateIndex];
+      var currentState = this.state[__currentStateIndex],
+        attributes;
 
       if (_.isUndefined(currentState)) {
-        return undefined;
+        attributes = undefined;
       } else if (_.isString(path)) {
         // get an internal property of this class
-        return _.getObjectValueByPath(currentState.attributes, path);
+        attributes = _.getObjectValueByPath(currentState.attributes, path);
       } else if (_.isObject(currentState.attributes) || _.isArray(currentState.attributes)) {
         // return the all class attributes by cloning them in a new object
-        return _.clone(currentState.attributes);
+        attributes = currentState.attributes;
       } else {
-        return currentState.attributes;
+        attributes = currentState.attributes;
       }
+
+      return _.clone(attributes);
     };
     /**
      * Parse the data sent to this class
@@ -217,14 +228,16 @@ define(function(require, exports, module) {
 
       // get all the current class attributes
       var args = arguments,
-        attributes = this.get(),
+        attributes = this.toJSON(),
         // assuming we don't need to update this
         mustUpdate = false;
 
-      // do we need to update a deep property?
-      if (args.length === 2 && _.isString(args[0])) {
+      // do we need to update a deep attribute?
+      if (args.length === 2 && _.isString(args[0]) && args[1]) {
+
         // update the deep value or return false
         mustUpdate = _.setObjectValueByPath(attributes, args[0], args[1]);
+
       } else {
         // update or add new values
         if (_.isObject(attributes)) {
@@ -283,7 +296,6 @@ define(function(require, exports, module) {
       if (!_.isArray(array)) {
         throw new Error('You cannot push new data in an element that is not an array');
       } else {
-
         array.splice(at || array.length, 0, item);
 
         if (path) {
@@ -307,9 +319,12 @@ define(function(require, exports, module) {
       if (!_.isArray(array)) {
         throw new Error('You cannot remove data from an element that is not an array');
       } else {
-        itemIndex = _.indexOf(item, array);
+        itemIndex = _.indexOf(array, item);
+
         if (!~itemIndex) throw new Error(JSON.stringify(item) + ' was not found in this array');
-        array = array.splice(itemIndex, 1);
+
+        array.splice(itemIndex, 1);
+
         if (path) {
           this.set(path, array);
         } else {
@@ -334,8 +349,6 @@ define(function(require, exports, module) {
 
       attributes = this.parse(attributes);
 
-      this.changes.push(attributes);
-
       if (_.contains(['set', 'unset', 'reset', 'read', 'add', 'remove'], method)) {
 
         this.state.push({
@@ -354,6 +367,7 @@ define(function(require, exports, module) {
 
       }
 
+      this.changes.push(attributes);
       this.events.push(method);
 
       return this;
@@ -383,15 +397,16 @@ define(function(require, exports, module) {
           destination.set(value);
         }
       };
-      if (sourcePath) {
-        this.listen(sourcePath).onValue(updateData);
-      } else {
-        this.changes.skipDuplicates(_.isEqual).onValue(updateData);
-      }
 
       // Bind this class also to the source
       if (_doubleWay) {
         destination.bind(this, destinationPath, sourcePath, false);
+      }
+
+      if (sourcePath) {
+        this.listen(sourcePath).onValue(updateData);
+      } else {
+        this.listen().onValue(updateData);
       }
 
       return this;
@@ -403,12 +418,22 @@ define(function(require, exports, module) {
      * @public
      */
     this.listen = function(path) {
+      var initialValue,
+        stream;
+
       if (path) {
-        return this.changes.map('.' + path)
-          .skipDuplicates(_.isEqual);
+        initialValue = this.get(path);
+        stream = this.changes.map('.' + path);
       } else {
-        return this.changes.skipDuplicates();
+        initialValue = this.get();
+        stream = this.changes;
       }
+
+      return stream.startWith(initialValue)
+        .skipWhile(function(value) {
+          return _.isEqual(value, initialValue);
+        })
+        .skipDuplicates(_.isEqual);
     };
 
     /**

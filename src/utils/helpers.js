@@ -38,13 +38,13 @@ define(function(require, exports, module) {
   /**
    * @module Butter.helpers
    */
-  module.exports = {
+  var helpers = {
     $: $,
     isBoolean: function(value) {
       return typeof value === 'boolean';
     },
     isObject: function(value) {
-      return _toString.call(value) === '[object Object]' && !this.isUndefined(value);
+      return _toString.call(value) === '[object Object]' && !helpers.isUndefined(value);
     },
     isString: function(value) {
       return typeof value === 'string';
@@ -58,35 +58,40 @@ define(function(require, exports, module) {
     isUndefined: function(value) {
       return typeof value === 'undefined';
     },
-    extend: function(destination, source) {
-      for (var property in source) {
-        destination[property] = source[property];
-      }
-      return this.clone(destination);
+    isEqual: function(value1, value2) {
+      /*console.log(JSON.stringify(value1) + '===' + JSON.stringify(value2));
+      console.log(JSON.stringify(value1) === JSON.stringify(value2));*/
+      return JSON.stringify(value1) === JSON.stringify(value2);
     },
     isEmpty: function(value) {
-      if (this.isObject) {
+      if (helpers.isObject) {
         return JSON.stringify(value).length === 2;
       } else {
         return value.length === 0;
       }
     },
+    extend: function(destination, source) {
+      for (var property in source) {
+        destination[property] = source[property];
+      }
+      return destination;
+    },
     difference: function(value1, value2, recursive) {
       var self = this,
         result = false;
 
-      if (!this.isEqual(value1, value2)) {
+      if (!helpers.isEqual(value1, value2)) {
         result = value1;
-        if (this.isArray(value1)) {
+        if (helpers.isArray(value1)) {
           result = [];
-          this.each(value1, function(value) {
+          helpers.each(value1, function(value) {
             if (!self.contains(value2, value)) {
               result.push(value);
             }
           });
-        } else if (this.isObject(value1)) {
+        } else if (helpers.isObject(value1)) {
           result = {};
-          this.each(value1, function(key, value) {
+          helpers.each(value1, function(key, value) {
             if (!value2[key]) {
               result[key] = value;
             }
@@ -95,25 +100,25 @@ define(function(require, exports, module) {
       }
       return result;
     },
-    clone: function(obj) {
-      if (obj) {
-        return JSON.parse(JSON.stringify(obj));
+    clone: function(element) {
+      if (helpers.isArray(element) || helpers.isObject(element)) {
+        return JSON.parse(JSON.stringify(element));
       } else {
-        return {};
+        return element;
       }
     },
     contains: function(array, value) {
-      return !!~this.indexOf(array, value);
+      return !!~helpers.indexOf(array, value);
     },
     indexOf: function(array, value) {
       var result = -1,
         i = 0,
         arrayLength = array.length;
 
-      if (this.isObject(value)) {
+      if (helpers.isObject(value)) {
         for (; i < arrayLength; i++) {
-          if (this.isEqual(array[i], value)) {
-            result = array[i];
+          if (helpers.isEqual(array[i], value)) {
+            result = i;
             break;
           }
         }
@@ -128,7 +133,7 @@ define(function(require, exports, module) {
     },
     each: function(iterator, callback, context) {
       var self = this,
-        isObject = this.isObject(iterator);
+        isObject = helpers.isObject(iterator);
 
       context = context || callback.prototype;
 
@@ -140,7 +145,7 @@ define(function(require, exports, module) {
             callback.apply(context, [key, iterator[key]]);
           });
         } else {
-          _each.call(iterator, this.bind(callback, context));
+          _each.call(iterator, helpers.bind(callback, context));
         }
       } else {
         $.each(iterator, function(i, element) {
@@ -152,9 +157,6 @@ define(function(require, exports, module) {
       return function() {
         return func.apply(context, arguments);
       };
-    },
-    isEqual: function(value1, value2) {
-      return JSON.stringify(value1) === JSON.stringify(value2);
     },
     getObjectValueByPath: function(object, path) {
       var result = _parseObjectByPath(object, path);
@@ -179,4 +181,6 @@ define(function(require, exports, module) {
 
     }
   };
+
+  module.exports = helpers;
 });

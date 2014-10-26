@@ -3,22 +3,30 @@
 <head>
   <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
   <meta http-equiv="Content-type" content="text/html; charset=utf-8">
-  <script src="//cdnjs.cloudflare.com/ajax/libs/json2/20130526/json2.js"></script>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/json2/20130526/json2.js"></script>
+  <![endif]-->
+  <style>
+    ul {
+      float:left;
+    }
+  </style>
 </head>
 <body>
 
   <div id="test">
-    <input value="ciao" type="text" data-value="value.1.name" />
-    <p data-text="value.1.name"></p>
-    <p data-text="value.1.name"></p>
-    <p data-text="value.1.name"></p>
-    <p data-text="value.1.name"></p>
-    <p data-text="value.1.name"></p>
-    <p data-text="value.1.name"></p>
-    <p data-text="value.1.name"></p>
-    <p data-text="value.1.name"></p>
-    <p data-text="value.1.name"></p>
-    <p data-text="value.1.name"></p>
+    <input type="text" data-value="values.0.name" />
+    <ul>
+      <li data-each="values as data">
+        <input type="text" data-value="data.name" />
+        <span data-text="data.name"></span>
+      </li>
+    </ul>
+    <button class="add">Add item</button>
+    <button class="remove">Remove Item</button>
+    <textarea>
+
+    </textarea>
   </div>
 
   <!-- Vendor -->
@@ -26,9 +34,9 @@
   <script src="../node_modules/baconjs/dist/Bacon.js"></script>
 
   <script src="../dist/Butter.js"></script>
-  <!-- run mocha -->
-  <script>
 
+  <script>
+      console.time("DOM update");
       var
         view = new Butter.View({
         el: '#test',
@@ -40,19 +48,51 @@
           type: 'click touchstart',
           name: 'onPointerDown',
           el: 'img'
+        },{
+          type: 'click',
+          name: 'onAddItem',
+          el:'.add'
+        },{
+          type: 'click',
+          name: 'onRemoveItem',
+          el:'.remove'
         }],
-        data: {
-          value: [{
-            name: 'me'
-          },{
-            name: 'you'
-          }]
+        data: {},
+        afterRender: function () {
+          var self = this;
+
+          this.data.changes.onValue(function(val){
+            this.$('textarea').val(self.data.toString());
+          });
+
+          this.onRemoveItem.onValue(function(){
+            self.data.remove(self.data.get('values.0'),'values');
+          });
+
+          this.onAddItem.map(function(){
+             return 'name' + self.data.get('values').length;
+          }).onValue(function(name){
+            self.data.add({
+              name:name
+            },'values');
+          });
+
         }
       }),
-        model = view.data;
+        i = 0,
+        ITEMS_COUNT = 50,
+        values = [];
+
+      while (i++ < ITEMS_COUNT) {
+        values.push({
+          name: 'name' + i
+        });
+      }
+
+      view.data.set('values',values);
 
       view.render();
-
+      console.timeEnd("DOM update");
 
       //view.unbind();
 

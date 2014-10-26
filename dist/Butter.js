@@ -1,6 +1,6 @@
 /**
  * Butter.js
- * Version: 0.0.1-alpha.4
+ * Version: 0.0.1-alpha.5
  * Author: Gianluca Guarini
  * Contact: gianluca.guarini@gmail.com
  * Website: http://www.gianlucaguarini.com/
@@ -93,13 +93,13 @@
           value: object
         };
       };
-    exports = {
+    var helpers = {
       $: $,
       isBoolean: function(value) {
         return typeof value === 'boolean';
       },
       isObject: function(value) {
-        return _toString.call(value) === '[object Object]' && !this.isUndefined(value);
+        return _toString.call(value) === '[object Object]' && !helpers.isUndefined(value);
       },
       isString: function(value) {
         return typeof value === 'string';
@@ -113,34 +113,37 @@
       isUndefined: function(value) {
         return typeof value === 'undefined';
       },
-      extend: function(destination, source) {
-        for (var property in source) {
-          destination[property] = source[property];
-        }
-        return this.clone(destination);
+      isEqual: function(value1, value2) {
+        return JSON.stringify(value1) === JSON.stringify(value2);
       },
       isEmpty: function(value) {
-        if (this.isObject) {
+        if (helpers.isObject) {
           return JSON.stringify(value).length === 2;
         } else {
           return value.length === 0;
         }
       },
+      extend: function(destination, source) {
+        for (var property in source) {
+          destination[property] = source[property];
+        }
+        return destination;
+      },
       difference: function(value1, value2, recursive) {
         var self = this,
           result = false;
-        if (!this.isEqual(value1, value2)) {
+        if (!helpers.isEqual(value1, value2)) {
           result = value1;
-          if (this.isArray(value1)) {
+          if (helpers.isArray(value1)) {
             result = [];
-            this.each(value1, function(value) {
+            helpers.each(value1, function(value) {
               if (!self.contains(value2, value)) {
                 result.push(value);
               }
             });
-          } else if (this.isObject(value1)) {
+          } else if (helpers.isObject(value1)) {
             result = {};
-            this.each(value1, function(key, value) {
+            helpers.each(value1, function(key, value) {
               if (!value2[key]) {
                 result[key] = value;
               }
@@ -149,24 +152,24 @@
         }
         return result;
       },
-      clone: function(obj) {
-        if (obj) {
-          return JSON.parse(JSON.stringify(obj));
+      clone: function(element) {
+        if (helpers.isArray(element) || helpers.isObject(element)) {
+          return JSON.parse(JSON.stringify(element));
         } else {
-          return {};
+          return element;
         }
       },
       contains: function(array, value) {
-        return !!~this.indexOf(array, value);
+        return !!~helpers.indexOf(array, value);
       },
       indexOf: function(array, value) {
         var result = -1,
           i = 0,
           arrayLength = array.length;
-        if (this.isObject(value)) {
+        if (helpers.isObject(value)) {
           for (; i < arrayLength; i++) {
-            if (this.isEqual(array[i], value)) {
-              result = array[i];
+            if (helpers.isEqual(array[i], value)) {
+              result = i;
               break;
             }
           }
@@ -181,7 +184,7 @@
       },
       each: function(iterator, callback, context) {
         var self = this,
-          isObject = this.isObject(iterator);
+          isObject = helpers.isObject(iterator);
         context = context || callback.prototype;
         if (!iterator)
           return;
@@ -194,7 +197,7 @@
               ]);
             });
           } else {
-            _each.call(iterator, this.bind(callback, context));
+            _each.call(iterator, helpers.bind(callback, context));
           }
         } else {
           $.each(iterator, function(i, element) {
@@ -212,9 +215,6 @@
         return function() {
           return func.apply(context, arguments);
         };
-      },
-      isEqual: function(value1, value2) {
-        return JSON.stringify(value1) === JSON.stringify(value2);
       },
       getObjectValueByPath: function(object, path) {
         var result = _parseObjectByPath(object, path);
@@ -236,6 +236,7 @@
         }
       }
     };
+    exports = helpers;
     return exports;
   }({});
   utils_defaults = function(exports) {
@@ -287,10 +288,77 @@
 
     var _ = utils_helpers;
     exports = {
-      'text': function($el, data, path) {
+      'each': function($el, data, path, view) {
+        $el.removeAttr(view.binderSelector + 'each');
+        var pathSplit = path.split(/\s+as\s+/gi),
+          subviews = [],
+          attributeName = pathSplit[1],
+          $parent = $el.parent(),
+          $template = $el.clone();
+        $el.remove();
+        path = pathSplit[0];
+        return {
+          addSubview: function(attributes, i) {
+            var $newEl = $template.clone(),
+              newView, newData, obj = {};
+            obj[attributeName] = attributes;
+            newData = new Butter.Data(obj);
+            newData.maxStatesLength = 1;
+            data.bind(newData, path + '.' + i, attributeName, true);
+            newView = new Butter.View({
+              el: $newEl,
+              data: newData
+            });
+            newView.destroyDataOnRemove = true;
+            subviews.push(newView);
+            newView.bind();
+            return newView;
+          },
+          get: function() {},
+          set: function() {
+            var html = [];
+            _.each(data.get(path), function() {
+              html.push(this.addSubview.apply(this, arguments).$el);
+            }, this);
+            view.state.map('.afterRender').onValue(function() {
+              $parent.append(html);
+              return Bacon.End;
+            });
+            data.listen(path).onValue(_.bind(function(values) {
+              var itemsCount = subviews.length - values.length;
+              if (!itemsCount) {
+                return;
+              } else if (itemsCount > 0) {
+                while (itemsCount--) {
+                  subviews[subviews.length - 1].remove();
+                  subviews.splice(subviews.length - 1, 1);
+                }
+              } else {
+                html = [];
+                while (itemsCount++ < 0) {
+                  var i = values.length + itemsCount - 1;
+                  html.push(this.addSubview(values[i], i).$el);
+                }
+                $parent.append(html);
+              }
+            }, this));
+          },
+          bind: function() {
+            this.set();
+            this.get();
+          },
+          unbind: function() {
+            _.each(subviews, function(subview) {
+              subview.remove();
+            });
+          }
+        };
+      },
+      'text': function($el, data, path, view) {
         var listener;
         return {
           set: function() {
+            $el.text(data.get(path));
             listener = data.listen(path).onValue($el, 'text');
           },
           bind: function() {
@@ -301,18 +369,18 @@
           }
         };
       },
-      'value': function($el, data, path) {
+      'value': function($el, data, path, view) {
         var listeners = [],
-          events = $el.asEventStream('keydown change copy paste input');
+          events = $el.asEventStream('input change copy paste');
         return {
           get: function() {
             listeners.push(events.map(function() {
               return $el.val();
             }).debounce(50).assign(data, 'set', path));
-            data.set(path, $el.val());
           },
           set: function() {
             listeners.push(data.listen(path).assign($el, 'val'));
+            $el.val(data.get(path));
           },
           bind: function() {
             this.set();
@@ -355,19 +423,24 @@
         return this;
       };
       this.toString = function() {
-        return JSON.stringify(this.get());
+        return JSON.stringify(this.toJSON());
+      };
+      this.toJSON = function() {
+        return this.get();
       };
       this.get = function(path) {
-        var currentState = this.state[__currentStateIndex];
+        var currentState = this.state[__currentStateIndex],
+          attributes;
         if (_.isUndefined(currentState)) {
-          return undefined;
+          attributes = undefined;
         } else if (_.isString(path)) {
-          return _.getObjectValueByPath(currentState.attributes, path);
+          attributes = _.getObjectValueByPath(currentState.attributes, path);
         } else if (_.isObject(currentState.attributes) || _.isArray(currentState.attributes)) {
-          return _.clone(currentState.attributes);
+          attributes = currentState.attributes;
         } else {
-          return currentState.attributes;
+          attributes = currentState.attributes;
         }
+        return _.clone(attributes);
       };
       this.parse = function(data) {
         return data;
@@ -444,9 +517,9 @@
       };
       this.set = function() {
         var args = arguments,
-          attributes = this.get(),
+          attributes = this.toJSON(),
           mustUpdate = false;
-        if (args.length === 2 && _.isString(args[0])) {
+        if (args.length === 2 && _.isString(args[0]) && args[1]) {
           mustUpdate = _.setObjectValueByPath(attributes, args[0], args[1]);
         } else {
           if (_.isObject(attributes)) {
@@ -495,10 +568,10 @@
         if (!_.isArray(array)) {
           throw new Error('You cannot remove data from an element that is not an array');
         } else {
-          itemIndex = _.indexOf(item, array);
+          itemIndex = _.indexOf(array, item);
           if (!~itemIndex)
             throw new Error(JSON.stringify(item) + ' was not found in this array');
-          array = array.splice(itemIndex, 1);
+          array.splice(itemIndex, 1);
           if (path) {
             this.set(path, array);
           } else {
@@ -514,7 +587,6 @@
           return false;
         }
         attributes = this.parse(attributes);
-        this.changes.push(attributes);
         if (_.contains([
             'set',
             'unset',
@@ -535,6 +607,7 @@
             this.length = attributes.length;
           }
         }
+        this.changes.push(attributes);
         this.events.push(method);
         return this;
       };
@@ -550,22 +623,28 @@
             destination.set(value);
           }
         };
+        if (_doubleWay) {
+          destination.bind(this, destinationPath, sourcePath, false);
+        }
         if (sourcePath) {
           this.listen(sourcePath).onValue(updateData);
         } else {
-          this.changes.skipDuplicates(_.isEqual).onValue(updateData);
-        }
-        if (_doubleWay) {
-          destination.bind(this, destinationPath, sourcePath, false);
+          this.listen().onValue(updateData);
         }
         return this;
       };
       this.listen = function(path) {
+        var initialValue, stream;
         if (path) {
-          return this.changes.map('.' + path).skipDuplicates(_.isEqual);
+          initialValue = this.get(path);
+          stream = this.changes.map('.' + path);
         } else {
-          return this.changes.skipDuplicates();
+          initialValue = this.get();
+          stream = this.changes;
         }
+        return stream.startWith(initialValue).skipWhile(function(value) {
+          return _.isEqual(value, initialValue);
+        }).skipDuplicates(_.isEqual);
       };
       this.on = function(method) {
         return this.events.filter(function(event) {
@@ -675,6 +754,11 @@
         this.binders = [];
         return this;
       };
+      this.on = function(method) {
+        return this.state.filter(function(event) {
+          return _.contains(method.split(' '), event);
+        }).skipDuplicates();
+      };
       this.bind = function() {
         var self = this;
         this.unbind();
@@ -689,7 +773,9 @@
           var selector = this.binderSelector + binderType;
           this.$('[' + selector + ']').each(function() {
             var $el = $(this),
-              binder = binders[binderType]($el, self.data, $el.attr(selector));
+              path = $el.attr(selector),
+              binder;
+            binder = binders[binderType]($el, self.data, path, self);
             self.binders.push(binder);
             binder.bind();
           });
@@ -700,7 +786,7 @@
         this.state.push('beforeRemove');
         this.state.end();
         if (this.destroyDataOnRemove) {
-          this.model.destroy();
+          this.data.destroy();
         }
         if (this.$el) {
           this.$el.remove();

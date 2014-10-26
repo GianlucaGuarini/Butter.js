@@ -99,6 +99,7 @@ define(function(require) {
 
       var callback = sinon.spy(),
         listenCallback = sinon.spy(),
+        listenCallback2 = sinon.spy(),
         newSecretIngredient = {
           salt: 'notTooMuch'
         };
@@ -106,21 +107,23 @@ define(function(require) {
       food.changes.onValue(callback);
 
       food.listen('ingredients.secretIngredients').onValue(listenCallback);
+      food.listen('ingredients.secretIngredients.0').onValue(listenCallback2);
 
       food.add(newSecretIngredient, 'ingredients.secretIngredients');
 
-      expect(food.get('ingredients.secretIngredients.1')).to.be.equal(newSecretIngredient);
+      expect(JSON.stringify(food.get('ingredients.secretIngredients.1'))).to.be.equal(JSON.stringify(newSecretIngredient));
+
       expect(listenCallback).was.calledWith(food.get('ingredients.secretIngredients'));
+      expect(listenCallback2).was.callCount(0);
 
       food.set('ingredients.secretIngredients', food.get('ingredients.secretIngredients'));
-
       food.set('name', 'delicious Italian food');
 
       food.reset();
 
       food.unset('ingredients.secretIngredients');
 
-      expect(listenCallback).was.callCount(2);
+      expect(listenCallback).was.callCount(3);
       expect(callback).was.callCount(5);
 
     });
@@ -213,8 +216,25 @@ define(function(require) {
       foods.add('pasta');
       foods.add('pane');
       foods.add('pizza', null, 1);
-      expect(foods.length).to.be.equal(3);
+      expect(foods).to.have.length(3);
       expect(foods.get('1')).to.be.equal('pizza');
+
+    });
+
+    it('remove', function() {
+
+      foods.add('pasta');
+      foods.add('pane');
+      foods.add('pizza', null, 1);
+      foods.remove('pasta');
+      foods.remove('pizza');
+      foods.remove('pane');
+      food.remove({
+        theyCallIt: 'love'
+      }, 'ingredients.secretIngredients');
+      expect(foods.remove).to.throwError();
+      expect(foods).to.have.length(0);
+      expect(food.get('ingredients.secretIngredients')).to.have.length(0);
 
     });
 
