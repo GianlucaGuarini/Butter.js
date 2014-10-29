@@ -5,24 +5,15 @@ define(function(require, exports, module) {
    */
 
   var _ = require('./utils/helpers'),
-    defaults = require('./utils/defaults'),
-    mixins = require('./utils/mixins');
-
-  module.exports = function(initialValues) {
-    /**
-     * Private stuff
-     * @private
-     */
-    var __currentStateIndex = 0;
-
-    /**
-     * @private
-     */
-    this._constructor = function() {
+    _defaults = require('./utils/defaults'),
+    _mixins = require('./utils/mixins'),
+    Data = function(initialValues) {
+      this.__initialValues = initialValues;
+      this.__currentStateIndex = 0;
       // extend this class with the default mixins used for any Butter class
-      _.extend(this, mixins);
+      _.extend(this, _mixins);
       // getting some useful options shared between any Data class
-      _.extend(this, defaults.data);
+      _.extend(this, _defaults.data);
 
       // this array will contain all the values of this class
       // its max length is specified in the Butter.defaults.data
@@ -42,41 +33,44 @@ define(function(require, exports, module) {
       return this;
     };
 
+  Data.prototype = {
+    constructor: Data,
+
     /**
      * Change this class data restoring them to a previous state
      * @private
      */
-    this._changeToState = function(index, method) {
+    _changeToState: function(index, method) {
       if (this.state[index]) {
-        __currentStateIndex = index;
+        this.__currentStateIndex = index;
         this.update(this.state[index].attributes, method);
       }
 
       return this;
-    };
+    },
     /**
      * Return this class data as valid string
      * @public
      */
-    this.toString = function() {
+    toString: function() {
       return JSON.stringify(this.toJSON());
-    };
+    },
     /**
      * Return this class data as javascript object
      * @public
      */
-    this.toJSON = function() {
+    toJSON: function() {
       return this.get();
-    };
+    },
     /**
      * Get any value of this class by a path
      * If no path is specified we get all the class attributes
      * @param { String } path: the path to the attribute
      * @public
      */
-    this.get = function(path) {
+    get: function(path) {
 
-      var currentState = this.state[__currentStateIndex],
+      var currentState = this.state[this.__currentStateIndex],
         attributes;
 
       if (_.isUndefined(currentState)) {
@@ -92,35 +86,35 @@ define(function(require, exports, module) {
       }
 
       return _.clone(attributes);
-    };
+    },
     /**
      * Parse the data sent to this class
      * @param  { Object|Array } data
      * @return { Object|Array }
      */
-    this.parse = function(data) {
+    parse: function(data) {
       return data;
-    };
+    },
     /**
      * Validate the data sent to this class
      * if it returns false this data will not set
      * @param  { Object|Array } data
      * @return { Boolean }
      */
-    this.validate = function(data) {
+    validate: function(data) {
       return true;
-    };
+    },
     /**
      * Return the difference between the current state of the class and the previous one
      * @return { Object|Array }
      */
-    this.changedAttributes = function() {
-      if (this.maxStatesLength > 2 && __currentStateIndex) {
-        return _.difference(this.state[__currentStateIndex - 1].attributes, this.get());
+    changedAttributes: function() {
+      if (this.maxStatesLength > 2 && this.__currentStateIndex) {
+        return _.difference(this.state[this.__currentStateIndex - 1].attributes, this.get());
       } else {
         return this.get();
       }
-    };
+    },
     /**
      * Method used to sync the class data with any server via ajax
      * TODO: clean up the code in this function
@@ -128,7 +122,7 @@ define(function(require, exports, module) {
      * @param  { Object } options: custom $.ajax options
      * @return { Object } jQuery promise
      */
-    this.sync = function(method, options) {
+    sync: function(method, options) {
 
       var httpVerb,
         ajax,
@@ -200,23 +194,23 @@ define(function(require, exports, module) {
 
 
       return ajax;
-    };
+    },
     /**
      * Get the data directly from the server
      * @param  { Object } options: jquery ajax oprions
      * @return { Bacon.EventStream }
      */
-    this.fetch = function(options) {
+    fetch: function(options) {
       return this.sync('read', options);
-    };
+    },
     /**
      * Save the current dataset on the server
      * @param  { Object } options: jquery ajax oprions
      * @return { Bacon.EventStream }
      */
-    this.save = function(options) {
+    save: function(options) {
       return this.sync('save', options);
-    };
+    },
     /**
      * Set/Update the data managed by this class
      * selecting a deep property or just using an object
@@ -224,7 +218,7 @@ define(function(require, exports, module) {
      * @param { * } : in case of a path for a deep update here you can set the new property
      * @public
      */
-    this.set = function() {
+    set: function() {
 
       // get all the current class attributes
       var args = arguments,
@@ -254,13 +248,13 @@ define(function(require, exports, module) {
       }
 
       return this;
-    };
+    },
     /**
      * Remove any property from the current class
      * @param { String } path: path to the value to remove
      * @public
      */
-    this.unset = function(path) {
+    unset: function(path) {
 
       var attributes = this.get();
       // update only if the nested property has been found
@@ -273,16 +267,16 @@ define(function(require, exports, module) {
       this.update(attributes, 'unset');
 
       return this;
-    };
+    },
     /**
      * Reset the class attributes to its initial state
      * @public
      */
-    this.reset = function() {
-      this.update(initialValues, 'reset');
+    reset: function() {
+      this.update(this.__initialValues, 'reset');
 
       return this;
-    };
+    },
     /**
      * Add new items into this class data if it's an array or otherwise
      * it can also add items to its internal properties
@@ -291,7 +285,7 @@ define(function(require, exports, module) {
      * @param  { Number } at
      * @public
      */
-    this.add = function(item, path, at) {
+    add: function(item, path, at) {
       var array = _.isString(path) ? this.get(path) : this.get();
       if (!_.isArray(array)) {
         throw new Error('You cannot push new data in an element that is not an array');
@@ -305,7 +299,7 @@ define(function(require, exports, module) {
         }
       }
       return this;
-    };
+    },
     /**
      * Remove items from this class data if it's an array or otherwise
      * it removes items from its internal properties
@@ -313,7 +307,7 @@ define(function(require, exports, module) {
      * @param  { String } path
      * @public
      */
-    this.remove = function(item, path) {
+    remove: function(item, path) {
       var array = _.isString(path) ? this.get(path) : this.get(),
         itemIndex;
       if (!_.isArray(array)) {
@@ -332,13 +326,13 @@ define(function(require, exports, module) {
         }
       }
       return this;
-    };
+    },
     /**
      * Update this class attributes
      * @param { Object } attributes: new data to set
      * @public
      */
-    this.update = function(attributes, method) {
+    update: function(attributes, method) {
 
       var validation = this.validate(attributes);
       // validate the data just passed
@@ -359,7 +353,7 @@ define(function(require, exports, module) {
         if (this.state.length > this.maxStatesLength + 1) {
           this.state.shift();
         }
-        __currentStateIndex = this.state.length - 1;
+        this.__currentStateIndex = this.state.length - 1;
 
         if (_.isArray(attributes)) {
           this.length = attributes.length;
@@ -370,54 +364,50 @@ define(function(require, exports, module) {
       this.changes.push(attributes);
       this.events.push(method);
 
+      // export the attributes outside
+      this.attributes = attributes;
+
       return this;
 
-    };
+    },
     /**
      * Return a new instance of this class cloning its attributes
      * @return { Object } Butter.Data instance
      * @public
      */
-    this.clone = function() {
+    clone: function() {
       return new Butter.Data(this.get()).extend(this);
-    };
+    },
 
     /**
      * Link this class to another of the same type
      * @public
      */
-    this.bind = function(destination, sourcePath, destinationPath, doubleWay) {
+    bind: function(destination, sourcePath, destinationPath, doubleWay) {
 
-      var _doubleWay = _.isUndefined(doubleWay) ? true : doubleWay;
-
-      var updateData = function(value) {
-        if (destinationPath) {
-          destination.set(destinationPath, value);
-        } else {
-          destination.set(value);
-        }
-      };
+      var self = this,
+        _doubleWay = _.isUndefined(doubleWay) ? true : doubleWay;
 
       // Bind this class also to the source
       if (_doubleWay) {
-        destination.bind(this, destinationPath, sourcePath, false);
+        destination.listen(destinationPath).onValue(function(value) {
+          self.set.apply(self, sourcePath ? [sourcePath, value] : [value]);
+        });
       }
 
-      if (sourcePath) {
-        this.listen(sourcePath).onValue(updateData);
-      } else {
-        this.listen().onValue(updateData);
-      }
+      this.listen(sourcePath).onValue(function(value) {
+        destination.set.apply(destination, destinationPath ? [destinationPath, value] : [value]);
+      });
 
       return this;
 
-    };
+    },
 
     /**
      * Return a data changes stream only on a specific internal attribute of this class
      * @public
      */
-    this.listen = function(path) {
+    listen: function(path) {
       var initialValue,
         stream;
 
@@ -434,45 +424,45 @@ define(function(require, exports, module) {
           return _.isEqual(value, initialValue);
         })
         .skipDuplicates(_.isEqual);
-    };
+    },
 
     /**
      * Return an events stream filtering only some of the events triggered by this class
      * @public
      */
-    this.on = function(method) {
+    on: function(method) {
       return this.events.filter(function(event) {
         return (_.contains(method.split(' '), event));
       }).skipDuplicates();
-    };
+    },
 
     /**
      * Switch the class state to a previous version
      * @public
      */
-    this.undo = function() {
-      if (__currentStateIndex > 0) {
-        this._changeToState(--__currentStateIndex, 'undo');
+    undo: function() {
+      if (this.__currentStateIndex > 0) {
+        this._changeToState(--this.__currentStateIndex, 'undo');
       }
 
       return this;
-    };
+    },
     /**
      * Update the class attributes canceling the effect of the undo method
      * @public
      */
-    this.redo = function() {
-      if (__currentStateIndex < this.maxStatesLength) {
-        this._changeToState(++__currentStateIndex, 'redo');
+    redo: function() {
+      if (this.__currentStateIndex < this.maxStatesLength) {
+        this._changeToState(++this.__currentStateIndex, 'redo');
       }
 
       return this;
-    };
+    },
     /**
      * Destroy the class and stop its data streams
      * @public
      */
-    this.destroy = function(options) {
+    destroy: function(options) {
       var requestStream,
         onModelDestroyed = _.bind(function() {
           this.changes.end();
@@ -485,10 +475,8 @@ define(function(require, exports, module) {
       } else {
         onModelDestroyed();
       }
-    };
-
-    // initialize this class
-    return this._constructor();
-
+    }
   };
+
+  module.exports = Data;
 });

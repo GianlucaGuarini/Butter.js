@@ -4,27 +4,25 @@ define(function(require, exports, module) {
    * @module Butter.View
    */
   var _ = require('./utils/helpers'),
-    binders = require('./utils/binders'),
-    defaults = require('./utils/defaults'),
-    mixins = require('./utils/mixins');
+    _binders = require('./utils/binders'),
+    _defaults = require('./utils/defaults'),
+    _mixins = require('./utils/mixins'),
+    View = function(options) {
 
-  module.exports = function(options) {
+      this.options = options;
+      this.destroyDataOnRemove = false;
 
-    /**
-     * Initialize this class with the options passed to it
-     * @private
-     */
-    this._constructor = function() {
+      this.events = [];
+      this.callbacks = [];
+      this.binders = [];
+      this.views = [];
       // extend this class with the default mixins used for any Butter class
-      _.extend(this, mixins);
+      _.extend(this, _mixins);
       // getting some useful options shared between any view class
-      _.extend(this, defaults.view);
+      _.extend(this, _defaults.view);
       // extend this view with the options passed to its instance
       _.extend(this, options || {});
 
-      this.binders = [];
-      this.views = [];
-      this.destroyDataOnRemove = false;
       // Special property representing the state of the current view
       this.state = new Bacon.Bus();
 
@@ -36,12 +34,14 @@ define(function(require, exports, module) {
       return this;
     };
 
+  View.prototype = {
+    constructor: View,
     /**
      * Extend this class with the options passed to its instance
      */
-    this.setData = function(data) {
+    setData: function(data) {
 
-      if (!options) return this;
+      if (!this.options) return this;
 
       if (data && data instanceof Butter.Data) {
         this.data = data;
@@ -53,17 +53,17 @@ define(function(require, exports, module) {
       }
 
       return this;
-    };
+    },
 
     /**
      * Borrowed from Backbone
      * @public
      */
-    this.setElement = function(el) {
+    setElement: function(el) {
 
       var attributes = {};
       if (el) {
-        this.$el = el instanceof _.$ ? options.el : _.$(el);
+        this.$el = el instanceof _.$ ? this.options.el : _.$(el);
       } else {
         this.$el = $('<' + this.tagName + '>');
       }
@@ -80,20 +80,20 @@ define(function(require, exports, module) {
       this.$el.attr(attributes);
 
       return this;
-    };
+    },
 
     /**
      * Select any element in this view
      * @public
      */
-    this.$ = function(selector) {
+    $: function(selector) {
       return _.$(selector, this.$el);
-    };
+    },
     /**
      * Render the markup and bind the model to the DOM
      * @public
      */
-    this.render = function() {
+    render: function() {
 
       this.state.push('beforeRender');
 
@@ -107,74 +107,132 @@ define(function(require, exports, module) {
         .push('afterRender');
 
       return this;
-    };
+    },
     /**
      * Remove all the events from the child nodes
      * @public
      */
-    this.unbind = function() {
+    unbind: function() {
       this.$el.off();
+
+      // End the events streams
       _.each(this.events, function(i, event) {
         if (this[event.name]) {
           this[event.name].onValue()();
           this[event.name] = null;
         }
       }, this);
+
+      // End the callbacks stream
+      _.each(this.callbacks, function(callback) {
+        callback();
+      });
+
+      // Kill all the data bindings
       _.each(this.binders, function(binder) {
-        binder.unbind();
+        binder();
       }, this);
+
       this.binders = [];
       return this;
-    };
+    },
 
     /**
      * Return an events stream filtering only some of the state triggered by this view
      * @public
      */
 
-    this.on = function(method) {
+    on: function(method) {
       return this.state.filter(function(event) {
         return (_.contains(method.split(' '), event));
       }).skipDuplicates();
-    };
+    },
+
+    /**
+     * This view eventually could scope its binders to a specific path of the Data instance
+     * @type {String}
+     */
+    bindingPath: '',
+    /**
+     * This string will hold a string that will be replaced by the binding path
+     * @type {String}
+     */
+    placeholderPath: '',
 
     /**
      * Delegate the events streams to the child nodes of this view
      * @public
      */
-    this.bind = function() {
-      var self = this;
+    bind: function() {
+      var self = this,
+        defeferredBinders = [];
       this.unbind();
       // Bind the view events
       _.each(this.events, function(event, i) {
         if (event.name) {
           this[event.name] = this.$el.asEventStream(event.type, event.el);
+          if (this.methods[event.name] && _.isFunction(this.methods[event.name])) {
+            this.callbacks.push(this[event.name].onValue(_.bind(this.methods[event.name], this)));
+          }
         } else {
           throw new Error('You must specify an event name for each event assigned to this view');
         }
       }, this);
 
       // Set the DOM binders parsing the view html
-      _.each(binders, function(binderType) {
-        var selector = this.binderSelector + binderType;
-        this.$('[' + selector + ']').each(function() {
-          var $el = $(this),
-            path = $el.attr(selector),
-            binder;
+      _.each(_binders, function(binderType) {
 
-          binder = binders[binderType]($el, self.data, path, self);
-          self.binders.push(binder);
-          binder.bind();
-        });
+        var selector = this.binderSelector + binderType,
+          createBinder = function(pathAttribute) {
+            var $el = $(this),
+              path = pathAttribute || $el.attr(selector),
+              binder;
+            // replace the placeholder paths with the correct ones
+            if (self.placeholderPath && self.bindingPath) {
+              path = path.replace(self.placeholderPath, self.bindingPath);
+            }
+
+            if (!path) {
+              throw new Error('The path to the data values is missing on the element ' + this);
+            }
+
+            binder = _binders[binderType]($el, self.data, path);
+
+            if (!binder.deferred) {
+              binder.bind();
+            } else {
+              defeferredBinders.push(binder);
+            }
+
+            self.binders.push(binder.unbind);
+
+          };
+
+        this.$('[' + selector + ']').each(createBinder);
+
+        // Check also the view el binders
+        var viewElementAttribute = this.$el.attr(selector);
+        // if this.$el has also the binder attribute
+        if (viewElementAttribute) {
+          // we bind it
+          createBinder.call(this.el, viewElementAttribute);
+        }
+
       }, this);
 
+      _.each(defeferredBinders, function(binder) {
+        binder.bind();
+      });
+
+      defeferredBinders = null;
+
       return this;
-    };
+    },
 
     /**
      * Remove this view its subViews and all the events
      */
-    this.remove = function() {
+    remove: function() {
       this.state.push('beforeRemove');
       this.state.end();
       /**
@@ -187,10 +245,8 @@ define(function(require, exports, module) {
         this.$el.remove();
       }
       this.removeProperties();
-    };
-
-    // initialize this class
-    return this._constructor();
-
+    }
   };
+
+  module.exports = View;
 });

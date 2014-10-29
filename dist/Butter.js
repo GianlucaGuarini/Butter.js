@@ -1,6 +1,6 @@
 /**
  * Butter.js
- * Version: 0.0.1-alpha.5
+ * Version: 0.0.1-alpha.6
  * Author: Gianluca Guarini
  * Contact: gianluca.guarini@gmail.com
  * Website: http://www.gianlucaguarini.com/
@@ -68,7 +68,7 @@
     root.Butter = factory(Bacon, jQuery);
   }
 }(this, function(Bacon, $) {
-  var utils_helpers, utils_defaults, utils_mixins, utils_binders, Data, View, Butter, exports;
+  var utils_helpers, utils_defaults, utils_mixins, utils_binders, Butter, _Data_, _View_, exports;
   utils_helpers = exports = function(exports) {
 
     var _toString = Object.prototype.toString,
@@ -286,30 +286,33 @@
   }({});
   utils_binders = function(exports) {
 
-    var _ = utils_helpers;
+    var _ = utils_helpers,
+      _marker = function() {
+        var $el = $('<span class="butter-marker" />');
+        $el.hide();
+        return $el;
+      };
     exports = {
-      'each': function($el, data, path, view) {
-        $el.removeAttr(view.binderSelector + 'each');
+      'each': function($el, data, path) {
+        $el.removeAttr(Butter.defaults.view.binderSelector + 'each');
         var pathSplit = path.split(/\s+as\s+/gi),
           subviews = [],
-          attributeName = pathSplit[1],
+          dataPath = pathSplit[0],
+          placeholderPath = pathSplit[1],
           $parent = $el.parent(),
-          $template = $el.clone();
+          $template = $el.clone().removeAttr(Butter.defaults.view.binderSelector + 'each');
         $el.remove();
-        path = pathSplit[0];
         return {
+          deferred: true,
           addSubview: function(attributes, i) {
             var $newEl = $template.clone(),
-              newView, newData, obj = {};
-            obj[attributeName] = attributes;
-            newData = new Butter.Data(obj);
-            newData.maxStatesLength = 1;
-            data.bind(newData, path + '.' + i, attributeName, true);
+              newView;
             newView = new Butter.View({
               el: $newEl,
-              data: newData
+              data: data,
+              placeholderPath: placeholderPath,
+              bindingPath: dataPath + '.' + i
             });
-            newView.destroyDataOnRemove = true;
             subviews.push(newView);
             newView.bind();
             return newView;
@@ -317,14 +320,12 @@
           get: function() {},
           set: function() {
             var html = [];
-            _.each(data.get(path), function() {
+            _.each(data.get(dataPath), function() {
               html.push(this.addSubview.apply(this, arguments).$el);
             }, this);
-            view.state.map('.afterRender').onValue(function() {
-              $parent.append(html);
-              return Bacon.End;
-            });
-            data.listen(path).onValue(_.bind(function(values) {
+            $parent.append(html);
+            html = null;
+            data.listen(dataPath).debounce(50).onValue(_.bind(function(values) {
               var itemsCount = subviews.length - values.length;
               if (!itemsCount) {
                 return;
@@ -351,15 +352,44 @@
             _.each(subviews, function(subview) {
               subview.remove();
             });
+            subviews = null;
+            $el.attr(Butter.defaults.view.binderSelector + 'each', path);
+            $parent.append($el);
           }
         };
       },
-      'text': function($el, data, path, view) {
+      show: function($el, data, path, inverse) {
+        var listener;
+        return {
+          deferred: true,
+          get: function() {
+            var onChange = function(value) {
+              if (value) {
+                $el[inverse ? 'hide' : 'show']();
+              } else {
+                $el[inverse ? 'show' : 'hide']();
+              }
+            };
+            listener = data.listen(path).debounce(50).onValue(onChange);
+            onChange(data.get(path));
+          },
+          bind: function() {
+            this.get();
+          },
+          unbind: function() {
+            listener();
+          }
+        };
+      },
+      hide: function($el, data, path) {
+        return this.show($el, data, path, true);
+      },
+      'text': function($el, data, path) {
         var listener;
         return {
           set: function() {
             $el.text(data.get(path));
-            listener = data.listen(path).onValue($el, 'text');
+            listener = data.listen(path).debounce(50).onValue($el, 'text');
           },
           bind: function() {
             this.set();
@@ -369,7 +399,7 @@
           }
         };
       },
-      'value': function($el, data, path, view) {
+      'value': function($el, data, path) {
         var listeners = [],
           events = $el.asEventStream('input change copy paste');
         return {
@@ -396,16 +426,16 @@
     };
     return exports;
   }({});
-  Data = function(exports) {
+  _Data_ = function(exports) {
 
     var _ = utils_helpers,
-      defaults = utils_defaults,
-      mixins = utils_mixins;
-    exports = function(initialValues) {
-      var __currentStateIndex = 0;
-      this._constructor = function() {
-        _.extend(this, mixins);
-        _.extend(this, defaults.data);
+      _defaults = utils_defaults,
+      _mixins = utils_mixins,
+      Data = function(initialValues) {
+        this.__initialValues = initialValues;
+        this.__currentStateIndex = 0;
+        _.extend(this, _mixins);
+        _.extend(this, _defaults.data);
         this.state = [];
         this.changes = new Bacon.Bus();
         this.events = new Bacon.Bus();
@@ -415,21 +445,23 @@
         }
         return this;
       };
-      this._changeToState = function(index, method) {
+    Data.prototype = {
+      constructor: Data,
+      _changeToState: function(index, method) {
         if (this.state[index]) {
-          __currentStateIndex = index;
+          this.__currentStateIndex = index;
           this.update(this.state[index].attributes, method);
         }
         return this;
-      };
-      this.toString = function() {
+      },
+      toString: function() {
         return JSON.stringify(this.toJSON());
-      };
-      this.toJSON = function() {
+      },
+      toJSON: function() {
         return this.get();
-      };
-      this.get = function(path) {
-        var currentState = this.state[__currentStateIndex],
+      },
+      get: function(path) {
+        var currentState = this.state[this.__currentStateIndex],
           attributes;
         if (_.isUndefined(currentState)) {
           attributes = undefined;
@@ -441,21 +473,21 @@
           attributes = currentState.attributes;
         }
         return _.clone(attributes);
-      };
-      this.parse = function(data) {
+      },
+      parse: function(data) {
         return data;
-      };
-      this.validate = function(data) {
+      },
+      validate: function(data) {
         return true;
-      };
-      this.changedAttributes = function() {
-        if (this.maxStatesLength > 2 && __currentStateIndex) {
-          return _.difference(this.state[__currentStateIndex - 1].attributes, this.get());
+      },
+      changedAttributes: function() {
+        if (this.maxStatesLength > 2 && this.__currentStateIndex) {
+          return _.difference(this.state[this.__currentStateIndex - 1].attributes, this.get());
         } else {
           return this.get();
         }
-      };
-      this.sync = function(method, options) {
+      },
+      sync: function(method, options) {
         var httpVerb, ajax, data;
         options = options || {};
         if (!this.url) {
@@ -508,14 +540,14 @@
           }
         }, this), _.bind(this.events.error, this));
         return ajax;
-      };
-      this.fetch = function(options) {
+      },
+      fetch: function(options) {
         return this.sync('read', options);
-      };
-      this.save = function(options) {
+      },
+      save: function(options) {
         return this.sync('save', options);
-      };
-      this.set = function() {
+      },
+      set: function() {
         var args = arguments,
           attributes = this.toJSON(),
           mustUpdate = false;
@@ -533,8 +565,8 @@
           this.update(attributes, 'set');
         }
         return this;
-      };
-      this.unset = function(path) {
+      },
+      unset: function(path) {
         var attributes = this.get();
         if (path) {
           _.setObjectValueByPath(attributes, path, null);
@@ -543,12 +575,12 @@
         }
         this.update(attributes, 'unset');
         return this;
-      };
-      this.reset = function() {
-        this.update(initialValues, 'reset');
+      },
+      reset: function() {
+        this.update(this.__initialValues, 'reset');
         return this;
-      };
-      this.add = function(item, path, at) {
+      },
+      add: function(item, path, at) {
         var array = _.isString(path) ? this.get(path) : this.get();
         if (!_.isArray(array)) {
           throw new Error('You cannot push new data in an element that is not an array');
@@ -561,8 +593,8 @@
           }
         }
         return this;
-      };
-      this.remove = function(item, path) {
+      },
+      remove: function(item, path) {
         var array = _.isString(path) ? this.get(path) : this.get(),
           itemIndex;
         if (!_.isArray(array)) {
@@ -579,8 +611,8 @@
           }
         }
         return this;
-      };
-      this.update = function(attributes, method) {
+      },
+      update: function(attributes, method) {
         var validation = this.validate(attributes);
         if (validation !== true) {
           this.events.error(validation);
@@ -602,38 +634,39 @@
           if (this.state.length > this.maxStatesLength + 1) {
             this.state.shift();
           }
-          __currentStateIndex = this.state.length - 1;
+          this.__currentStateIndex = this.state.length - 1;
           if (_.isArray(attributes)) {
             this.length = attributes.length;
           }
         }
         this.changes.push(attributes);
         this.events.push(method);
+        this.attributes = attributes;
         return this;
-      };
-      this.clone = function() {
+      },
+      clone: function() {
         return new Butter.Data(this.get()).extend(this);
-      };
-      this.bind = function(destination, sourcePath, destinationPath, doubleWay) {
-        var _doubleWay = _.isUndefined(doubleWay) ? true : doubleWay;
-        var updateData = function(value) {
-          if (destinationPath) {
-            destination.set(destinationPath, value);
-          } else {
-            destination.set(value);
-          }
-        };
+      },
+      bind: function(destination, sourcePath, destinationPath, doubleWay) {
+        var self = this,
+          _doubleWay = _.isUndefined(doubleWay) ? true : doubleWay;
         if (_doubleWay) {
-          destination.bind(this, destinationPath, sourcePath, false);
+          destination.listen(destinationPath).onValue(function(value) {
+            self.set.apply(self, sourcePath ? [
+              sourcePath,
+              value
+            ] : [value]);
+          });
         }
-        if (sourcePath) {
-          this.listen(sourcePath).onValue(updateData);
-        } else {
-          this.listen().onValue(updateData);
-        }
+        this.listen(sourcePath).onValue(function(value) {
+          destination.set.apply(destination, destinationPath ? [
+            destinationPath,
+            value
+          ] : [value]);
+        });
         return this;
-      };
-      this.listen = function(path) {
+      },
+      listen: function(path) {
         var initialValue, stream;
         if (path) {
           initialValue = this.get(path);
@@ -645,25 +678,25 @@
         return stream.startWith(initialValue).skipWhile(function(value) {
           return _.isEqual(value, initialValue);
         }).skipDuplicates(_.isEqual);
-      };
-      this.on = function(method) {
+      },
+      on: function(method) {
         return this.events.filter(function(event) {
           return _.contains(method.split(' '), event);
         }).skipDuplicates();
-      };
-      this.undo = function() {
-        if (__currentStateIndex > 0) {
-          this._changeToState(--__currentStateIndex, 'undo');
+      },
+      undo: function() {
+        if (this.__currentStateIndex > 0) {
+          this._changeToState(--this.__currentStateIndex, 'undo');
         }
         return this;
-      };
-      this.redo = function() {
-        if (__currentStateIndex < this.maxStatesLength) {
-          this._changeToState(++__currentStateIndex, 'redo');
+      },
+      redo: function() {
+        if (this.__currentStateIndex < this.maxStatesLength) {
+          this._changeToState(++this.__currentStateIndex, 'redo');
         }
         return this;
-      };
-      this.destroy = function(options) {
+      },
+      destroy: function(options) {
         var requestStream, onModelDestroyed = _.bind(function() {
           this.changes.end();
           this.events.end();
@@ -674,33 +707,37 @@
         } else {
           onModelDestroyed();
         }
-      };
-      return this._constructor();
+      }
     };
+    exports = Data;
     return exports;
   }({});
-  View = function(exports) {
+  _View_ = function(exports) {
 
     var _ = utils_helpers,
-      binders = utils_binders,
-      defaults = utils_defaults,
-      mixins = utils_mixins;
-    exports = function(options) {
-      this._constructor = function() {
-        _.extend(this, mixins);
-        _.extend(this, defaults.view);
-        _.extend(this, options || {});
+      _binders = utils_binders,
+      _defaults = utils_defaults,
+      _mixins = utils_mixins,
+      View = function(options) {
+        this.options = options;
+        this.destroyDataOnRemove = false;
+        this.events = [];
+        this.callbacks = [];
         this.binders = [];
         this.views = [];
-        this.destroyDataOnRemove = false;
+        _.extend(this, _mixins);
+        _.extend(this, _defaults.view);
+        _.extend(this, options || {});
         this.state = new Bacon.Bus();
         this.setData(this.data);
         this.setElement(this.el);
         this.state.onValue(_.bind(this.exec, this));
         return this;
       };
-      this.setData = function(data) {
-        if (!options)
+    View.prototype = {
+      constructor: View,
+      setData: function(data) {
+        if (!this.options)
           return this;
         if (data && data instanceof Butter.Data) {
           this.data = data;
@@ -711,11 +748,11 @@
           }
         }
         return this;
-      };
-      this.setElement = function(el) {
+      },
+      setElement: function(el) {
         var attributes = {};
         if (el) {
-          this.$el = el instanceof _.$ ? options.el : _.$(el);
+          this.$el = el instanceof _.$ ? this.options.el : _.$(el);
         } else {
           this.$el = $('<' + this.tagName + '>');
         }
@@ -728,19 +765,19 @@
         }
         this.$el.attr(attributes);
         return this;
-      };
-      this.$ = function(selector) {
+      },
+      $: function(selector) {
         return _.$(selector, this.$el);
-      };
-      this.render = function() {
+      },
+      render: function() {
         this.state.push('beforeRender');
         if (this.template) {
           this.$el.html(_.isFunction(this.template) ? this.template(this.data.get()) : this.template);
         }
         this.bind().state.push('afterRender');
         return this;
-      };
-      this.unbind = function() {
+      },
+      unbind: function() {
         this.$el.off();
         _.each(this.events, function(i, event) {
           if (this[event.name]) {
@@ -748,41 +785,69 @@
             this[event.name] = null;
           }
         }, this);
+        _.each(this.callbacks, function(callback) {
+          callback();
+        });
         _.each(this.binders, function(binder) {
-          binder.unbind();
+          binder();
         }, this);
         this.binders = [];
         return this;
-      };
-      this.on = function(method) {
+      },
+      on: function(method) {
         return this.state.filter(function(event) {
           return _.contains(method.split(' '), event);
         }).skipDuplicates();
-      };
-      this.bind = function() {
-        var self = this;
+      },
+      bindingPath: '',
+      placeholderPath: '',
+      bind: function() {
+        var self = this,
+          defeferredBinders = [];
         this.unbind();
         _.each(this.events, function(event, i) {
           if (event.name) {
             this[event.name] = this.$el.asEventStream(event.type, event.el);
+            if (this.methods[event.name] && _.isFunction(this.methods[event.name])) {
+              this.callbacks.push(this[event.name].onValue(_.bind(this.methods[event.name], this)));
+            }
           } else {
             throw new Error('You must specify an event name for each event assigned to this view');
           }
         }, this);
-        _.each(binders, function(binderType) {
-          var selector = this.binderSelector + binderType;
-          this.$('[' + selector + ']').each(function() {
-            var $el = $(this),
-              path = $el.attr(selector),
-              binder;
-            binder = binders[binderType]($el, self.data, path, self);
-            self.binders.push(binder);
-            binder.bind();
-          });
+        _.each(_binders, function(binderType) {
+          var selector = this.binderSelector + binderType,
+            createBinder = function(pathAttribute) {
+              var $el = $(this),
+                path = pathAttribute || $el.attr(selector),
+                binder;
+              if (self.placeholderPath && self.bindingPath) {
+                path = path.replace(self.placeholderPath, self.bindingPath);
+              }
+              if (!path) {
+                throw new Error('The path to the data values is missing on the element ' + this);
+              }
+              binder = _binders[binderType]($el, self.data, path);
+              if (!binder.deferred) {
+                binder.bind();
+              } else {
+                defeferredBinders.push(binder);
+              }
+              self.binders.push(binder.unbind);
+            };
+          this.$('[' + selector + ']').each(createBinder);
+          var viewElementAttribute = this.$el.attr(selector);
+          if (viewElementAttribute) {
+            createBinder.call(this.el, viewElementAttribute);
+          }
         }, this);
+        _.each(defeferredBinders, function(binder) {
+          binder.bind();
+        });
+        defeferredBinders = null;
         return this;
-      };
-      this.remove = function() {
+      },
+      remove: function() {
         this.state.push('beforeRemove');
         this.state.end();
         if (this.destroyDataOnRemove) {
@@ -792,9 +857,9 @@
           this.$el.remove();
         }
         this.removeProperties();
-      };
-      return this._constructor();
+      }
     };
+    exports = View;
     return exports;
   }({});
   Butter = function(exports) {
@@ -804,8 +869,8 @@
       defaults: utils_defaults,
       mixins: utils_mixins,
       binders: utils_binders,
-      Data: Data,
-      View: View
+      Data: _Data_,
+      View: _View_
     };
     return exports;
   }({});

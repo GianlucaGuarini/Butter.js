@@ -18,6 +18,7 @@ module.exports = (grunt, options) =>
   requirejsOptions =
     baseUrl: 'src'
     name: mainFile
+    # useStrict: true
     wrap: false
     # mainConfigFile: 'src/requirejs-config.js'
     preserveLicenseComments: false
@@ -32,6 +33,7 @@ module.exports = (grunt, options) =>
       fs.writeFileSync outputFile, amdclean.clean(
         code: fs.readFileSync(outputFile)
         aggressiveOptimizations: true
+        # removeUseStricts: false
         # wrap the output in a UMD (Universal Module Definition) pattern
         wrap:
           start: banner + '\n' + startFrag

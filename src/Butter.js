@@ -17,7 +17,7 @@ define(function(require, exports, module) {
     defaults: require('./utils/defaults'),
     /**
      * Some useful mixins extending any Butter.js class
-     * @module Butter.mixins
+ * @module Butter.mixins
      */
     mixins: require('./utils/mixins'),
     /**
