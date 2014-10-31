@@ -17,7 +17,7 @@ define(function(require, exports, module) {
     defaults: require('./utils/defaults'),
     /**
      * Some useful mixins extending any Butter.js class
- * @module Butter.mixins
+     * @module Butter.mixins
      */
     mixins: require('./utils/mixins'),
     /**
@@ -32,6 +32,17 @@ define(function(require, exports, module) {
     /**
      * @module Butter.View
      */
-    View: require('./View')
+    View: require('./View'),
+    /**
+     * Handy helper to create new Butter instances
+     */
+    create: {
+      View: function(options) {
+        return new Butter.View(options);
+      },
+      Data: function(options) {
+        return new Butter.Data(options);
+      }
+    }
   };
 });

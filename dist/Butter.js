@@ -287,10 +287,10 @@
   utils_binders = function(exports) {
 
     var _ = utils_helpers,
-      _marker = function() {
-        var $el = $('<span class="butter-marker" />');
-        $el.hide();
-        return $el;
+      _killListeners = function(listeners) {
+        _.each(listeners, function(listener) {
+          listener();
+        });
       };
     exports = {
       'each': function($el, data, path) {
@@ -384,12 +384,29 @@
       hide: function($el, data, path) {
         return this.show($el, data, path, true);
       },
+      css: function($el, data, path) {
+        var cssRules = path.split(/\s+(?:&&|and)\s+/gi),
+          listeners = [];
+        return {
+          set: function() {
+            _.each(cssRules, function(cssRulePath) {
+              var pathSplit = cssRulePath.split(/\s+as\s+/gi);
+              listeners.push(data.listen(pathSplit[0]).startWith(data.get(pathSplit[0])).assign($el, 'css', pathSplit[1]));
+            });
+          },
+          bind: function() {
+            this.set();
+          },
+          unbind: function() {
+            _killListeners(listeners);
+          }
+        };
+      },
       'text': function($el, data, path) {
         var listener;
         return {
           set: function() {
-            $el.text(data.get(path));
-            listener = data.listen(path).debounce(50).onValue($el, 'text');
+            listener = data.listen(path).debounce(50).startWith(data.get(path)).onValue($el, 'text');
           },
           bind: function() {
             this.set();
@@ -409,17 +426,14 @@
             }).debounce(50).assign(data, 'set', path));
           },
           set: function() {
-            listeners.push(data.listen(path).assign($el, 'val'));
-            $el.val(data.get(path));
+            listeners.push(data.listen(path).startWith(data.get(path)).assign($el, 'val'));
           },
           bind: function() {
             this.set();
             this.get();
           },
           unbind: function() {
-            _.each(listeners, function(listener) {
-              listener();
-            });
+            _killListeners(listeners);
           }
         };
       }
@@ -827,6 +841,7 @@
               if (!path) {
                 throw new Error('The path to the data values is missing on the element ' + this);
               }
+              path = path.replace(/[\n\r]+/g, '').replace(/^\s\s*/, '').replace(/\s\s*$/, '');
               binder = _binders[binderType]($el, self.data, path);
               if (!binder.deferred) {
                 binder.bind();
@@ -850,6 +865,7 @@
       remove: function() {
         this.state.push('beforeRemove');
         this.state.end();
+        this.unbind();
         if (this.destroyDataOnRemove) {
           this.data.destroy();
         }
@@ -870,7 +886,15 @@
       mixins: utils_mixins,
       binders: utils_binders,
       Data: _Data_,
-      View: _View_
+      View: _View_,
+      create: {
+        View: function(options) {
+          return new Butter.View(options);
+        },
+        Data: function(options) {
+          return new Butter.Data(options);
+        }
+      }
     };
     return exports;
   }({});

@@ -1,10 +1,10 @@
 define(function(require, exports, module) {
   'use strict';
   var _ = require('../utils/helpers'),
-    _marker = function() {
-      var $el = $('<span class="butter-marker" />');
-      $el.hide();
-      return $el;
+    _killListeners = function(listeners) {
+      _.each(listeners, function(listener) {
+        listener();
+      });
     };
   /**
    * @module Butter.binders
@@ -13,7 +13,7 @@ define(function(require, exports, module) {
     /**
      * To loop and bind an array or an object to a DOM element
      * [data-each] binder
-     * @prop path: in this case the path value must contain the 'as'
+ * @prop path: in this    case the path value must contain the 'as'
      * keyword to specify the values that must be used inside the loop
      */
     'each': function($el, data, path) {
@@ -136,6 +136,38 @@ define(function(require, exports, module) {
       return this.show($el, data, path, true);
     },
     /**
+     * Apply any css to the element binding it to its data
+     * [data-css] binder
+     */
+    css: function($el, data, path) {
+      // split the path of the selector
+      var cssRules = path.split(/\s+(?:&&|and)\s+/gi),
+        listeners = [];
+
+      return {
+        set: function() {
+          _.each(cssRules, function(cssRulePath) {
+
+            var pathSplit = cssRulePath.split(/\s+as\s+/gi);
+
+            listeners.push(
+              data
+              .listen(pathSplit[0])
+              .startWith(data.get(pathSplit[0]))
+              .assign($el, 'css', pathSplit[1])
+            );
+          });
+        },
+        bind: function() {
+          this.set();
+        },
+        unbind: function() {
+          _killListeners(listeners);
+        }
+      };
+
+    },
+    /**
      * To bind the text of any html element to the view data
      * [data-text] binder
      */
@@ -143,10 +175,10 @@ define(function(require, exports, module) {
       var listener;
       return {
         set: function() {
-          $el.text(data.get(path));
           listener = data
             .listen(path)
             .debounce(50)
+            .startWith(data.get(path))
             .onValue($el, 'text');
         },
         bind: function() {
@@ -175,17 +207,18 @@ define(function(require, exports, module) {
           );
         },
         set: function() {
-          listeners.push(data.listen(path).assign($el, 'val'));
-          $el.val(data.get(path));
+          listeners
+            .push(data.listen(path)
+              .startWith(data.get(path))
+              .assign($el, 'val'));
+
         },
         bind: function() {
           this.set();
           this.get();
         },
         unbind: function() {
-          _.each(listeners, function(listener) {
-            listener();
-          });
+          _killListeners(listeners);
         }
       };
     }

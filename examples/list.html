@@ -13,13 +13,14 @@
   </style>
 </head>
 <body>
-
   <div id="test">
     <input type="text" data-value="values.0.name" />
     <ul>
       <li data-each="values as data">
-        <input data-hide="data.active" type="text" data-value="data.name" />
-        <span data-show="data.active" data-text="data.name"></span>
+        <input type="text" data-value="data.name" />
+        <span data-text="data.name"></span>
+        <span data-show="data.active"> I am active!</span>
+        <span data-hide="data.active"> I am disabled!</span>
       </li>
     </ul>
     <button class="add">Add item</button>

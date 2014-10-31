@@ -196,6 +196,13 @@ define(function(require, exports, module) {
               throw new Error('The path to the data values is missing on the element ' + this);
             }
 
+            // Clean up the string
+            // here could really come anything
+            // let's be sure we remove the shit from here
+            path = path.replace(/[\n\r]+/g, '')
+              .replace(/^\s\s*/, '')
+              .replace(/\s\s*$/, '');
+
             binder = _binders[binderType]($el, self.data, path);
 
             if (!binder.deferred) {
@@ -235,6 +242,7 @@ define(function(require, exports, module) {
     remove: function() {
       this.state.push('beforeRemove');
       this.state.end();
+      this.unbind();
       /**
        *  Destroy the model created with this view because we assume it's not shared with other views
        */
