@@ -153,6 +153,17 @@ define(function(require, exports, module) {
         });
       }
     },
+    keys: _keys || function(obj) {
+      var keys = [];
+      for (var prop in obj) {
+        if (obj.hasOwnProperty(prop)) {
+          keys.push(obj[prop]);
+        }
+      }
+
+      return keys;
+
+    },
     bind: function(func, context) {
       return function() {
         return func.apply(context, arguments);
@@ -183,4 +194,5 @@ define(function(require, exports, module) {
   };
 
   module.exports = helpers;
+
 });

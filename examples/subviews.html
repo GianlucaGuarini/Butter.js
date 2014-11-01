@@ -12,7 +12,7 @@
     }
     .ball {
       position: absolute;
-      margin-top:150px;
+      margin-top: 150px;
       margin-left: 150px;
       width:30px;
       height:30px;
@@ -20,13 +20,22 @@
       border-radius:30px;
       position: absolute;
     }
+    section {
+      float:left;
+      width:200px;
+      height: 200px;
+      position: relative;
+    }
   </style>
+
 </head>
 <body>
 
   <div id="test">
-    <div data-css="x as left and y as top" class="ball"></div>
   </div>
+  <script type="text/template" id="template">
+    <div data-css="x as left and y as top" class="ball"></div>
+  </script>
 
   <!-- Vendor -->
   <script src="../node_modules/jquery/dist/jquery.js"></script>
@@ -37,12 +46,27 @@
   <script>
       console.time("DOM update");
 
-      var view = new Butter.View({
+      var view,
+          data = new Butter.Data({
+              x: 0,
+              y: 0
+          }),
+          subviews = [];
+
+      for (var i = 0; i < 50; i ++) {
+        subviews.push({
+          '':new Butter.View({
+            data: data,
+            tagName: 'section',
+            template: '#template'
+          })
+        });
+      }
+
+      view = new Butter.View({
         el: '#test',
-        data: {
-          x: 0,
-          y: 0
-        },
+        views: subviews,
+        data: data,
         afterRender: function () {
           var self = this,
               time;
@@ -55,7 +79,9 @@
             });
           }, 1000 / 33);
         }
-      }).render();
+      });
+
+      view.render();
 
       console.timeEnd("DOM update");
 

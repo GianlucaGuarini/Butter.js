@@ -13,7 +13,7 @@ define(function(require, exports, module) {
     /**
      * To loop and bind an array or an object to a DOM element
      * [data-each] binder
- * @prop path: in this    case the path value must contain the 'as'
+     * @prop path: in this    case the path value must contain the 'as'
      * keyword to specify the values that must be used inside the loop
      */
     'each': function($el, data, path) {

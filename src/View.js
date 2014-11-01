@@ -15,7 +15,7 @@ define(function(require, exports, module) {
       this.events = [];
       this.callbacks = [];
       this.binders = [];
-      this.views = [];
+      this.subviews = [];
       // extend this class with the default mixins used for any Butter class
       _.extend(this, _mixins);
       // getting some useful options shared between any view class
@@ -98,15 +98,79 @@ define(function(require, exports, module) {
       this.state.push('beforeRender');
 
       if (this.template) {
+
+        if (_.isString(this.template)) {
+          // get the template html
+          this.template = this.fetchTemplate(this.template);
+        }
+
         this.$el.html(_.isFunction(this.template) ? this.template(this.data.get()) : this.template);
       }
 
-      this
-        .bind()
-        .state
-        .push('afterRender');
+      // block the data bindings
+      this.bind();
+
+
+      // loop and render the subviews
+      if (_.isArray(this.views)) {
+        this.insertSubviews(this.views);
+      }
+
+      this.state.push('afterRender');
 
       return this;
+    },
+    /**
+     * Render all the subviews
+     * @public
+     * @param  { String } selector: DOM query selector where we will inject the subview
+     * @param  { Object } subview: Butter.View instance
+     */
+    insertSubviews: function(subviews) {
+
+
+      _.each(subviews, function(subviewObj) {
+
+        var selector = _.keys(subviewObj)[0],
+          subview = subviewObj[selector];
+
+        if (selector) {
+          this.setSubview(selector, subview);
+        } else {
+          this.insertSubview(subview);
+        }
+
+        subview.render();
+
+      }, this);
+
+      return this;
+    },
+    insertSubview: function(subview) {
+
+      this.subviews.push(subview);
+
+      this.insert(subview.$el);
+
+      return subview;
+    },
+    /**
+     * Render a subview injecting it into its wrapper
+     * @param  { String } selector: DOM query selector where we want inject the subview
+     * @param  { Object } subview: Butter.View instance
+     */
+    setSubview: function(selector, subview) {
+      var $wrapper = this.$(selector);
+
+      if (!$wrapper.length) {
+        throw new Error('no element found with the ' + selector + ' selector');
+      }
+
+      this.subviews.push(subview);
+
+      $wrapper.append(subview.$el);
+
+      return subview;
     },
     /**
      * Remove all the events from the child nodes
@@ -128,12 +192,17 @@ define(function(require, exports, module) {
         callback();
       });
 
+      _.each(this.subviews, function(subview) {
+        subview.unbind();
+      });
+
       // Kill all the data bindings
       _.each(this.binders, function(binder) {
         binder();
       }, this);
 
       this.binders = [];
+
       return this;
     },
 
@@ -166,7 +235,14 @@ define(function(require, exports, module) {
     bind: function() {
       var self = this,
         defeferredBinders = [];
+
       this.unbind();
+
+      // bind all the subviews
+      _.each(this.subviews, function(subview) {
+        subview.bind();
+      });
+
       // Bind the view events
       _.each(this.events, function(event, i) {
         if (event.name) {
@@ -231,11 +307,10 @@ define(function(require, exports, module) {
         binder.bind();
       });
 
-      defeferredBinders = null;
+
 
       return this;
     },
-
     /**
      * Remove this view its subViews and all the events
      */
@@ -249,12 +324,19 @@ define(function(require, exports, module) {
       if (this.destroyDataOnRemove) {
         this.data.destroy();
       }
+
+      _.each(this.subviews, function(subview) {
+        subview.remove();
+      }, this);
+
       if (this.$el) {
         this.$el.remove();
       }
+
       this.removeProperties();
     }
   };
 
   module.exports = View;
+
 });

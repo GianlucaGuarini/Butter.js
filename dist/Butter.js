@@ -1,6 +1,6 @@
 /**
  * Butter.js
- * Version: 0.0.1-alpha.6
+ * Version: 0.0.1-alpha.7
  * Author: Gianluca Guarini
  * Contact: gianluca.guarini@gmail.com
  * Website: http://www.gianlucaguarini.com/
@@ -211,6 +211,15 @@
           });
         }
       },
+      keys: _keys || function(obj) {
+        var keys = [];
+        for (var prop in obj) {
+          if (obj.hasOwnProperty(prop)) {
+            keys.push(obj[prop]);
+          }
+        }
+        return keys;
+      },
       bind: function(func, context) {
         return function() {
           return func.apply(context, arguments);
@@ -247,10 +256,16 @@
     exports = {
       view: {
         binderSelector: 'data-',
-        destroyModelsCreated: true,
+        destroyDatasCreated: true,
         tagName: 'div',
         id: null,
-        className: null
+        className: null,
+        fetchTemplate: function(template) {
+          return $(template).html();
+        },
+        insert: function($el) {
+          this.$el.append($el);
+        }
       },
       data: {
         maxStatesLength: 10,
@@ -262,9 +277,6 @@
   utils_mixins = function(exports) {
 
     var _ = utils_helpers;
-    /**
-     * @module Butter.mixins
-     */
     exports = {
       extend: function(properties) {
         _.extend(this, properties);
@@ -738,7 +750,7 @@
         this.events = [];
         this.callbacks = [];
         this.binders = [];
-        this.views = [];
+        this.subviews = [];
         _.extend(this, _mixins);
         _.extend(this, _defaults.view);
         _.extend(this, options || {});
@@ -786,10 +798,44 @@
       render: function() {
         this.state.push('beforeRender');
         if (this.template) {
+          if (_.isString(this.template)) {
+            this.template = this.fetchTemplate(this.template);
+          }
           this.$el.html(_.isFunction(this.template) ? this.template(this.data.get()) : this.template);
         }
-        this.bind().state.push('afterRender');
+        this.bind();
+        if (_.isArray(this.views)) {
+          this.insertSubviews(this.views);
+        }
+        this.state.push('afterRender');
         return this;
+      },
+      insertSubviews: function(subviews) {
+        _.each(subviews, function(subviewObj) {
+          var selector = _.keys(subviewObj)[0],
+            subview = subviewObj[selector];
+          if (selector) {
+            this.setSubview(selector, subview);
+          } else {
+            this.insertSubview(subview);
+          }
+          subview.render();
+        }, this);
+        return this;
+      },
+      insertSubview: function(subview) {
+        this.subviews.push(subview);
+        this.insert(subview.$el);
+        return subview;
+      },
+      setSubview: function(selector, subview) {
+        var $wrapper = this.$(selector);
+        if (!$wrapper.length) {
+          throw new Error('no element found with the ' + selector + ' selector');
+        }
+        this.subviews.push(subview);
+        $wrapper.append(subview.$el);
+        return subview;
       },
       unbind: function() {
         this.$el.off();
@@ -801,6 +847,9 @@
         }, this);
         _.each(this.callbacks, function(callback) {
           callback();
+        });
+        _.each(this.subviews, function(subview) {
+          subview.unbind();
         });
         _.each(this.binders, function(binder) {
           binder();
@@ -819,6 +868,9 @@
         var self = this,
           defeferredBinders = [];
         this.unbind();
+        _.each(this.subviews, function(subview) {
+          subview.bind();
+        });
         _.each(this.events, function(event, i) {
           if (event.name) {
             this[event.name] = this.$el.asEventStream(event.type, event.el);
@@ -859,7 +911,6 @@
         _.each(defeferredBinders, function(binder) {
           binder.bind();
         });
-        defeferredBinders = null;
         return this;
       },
       remove: function() {
@@ -869,6 +920,9 @@
         if (this.destroyDataOnRemove) {
           this.data.destroy();
         }
+        _.each(this.subviews, function(subview) {
+          subview.remove();
+        }, this);
         if (this.$el) {
           this.$el.remove();
         }
