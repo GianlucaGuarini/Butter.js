@@ -241,13 +241,16 @@ define(function(require) {
     it('fetch object', function(done) {
 
       var callback = sinon.spy();
+
       food.url = window.FIXTURES_URL + 'object.json';
       food.events.onValue(callback);
+
       food.on('read').onValue(function() {
         expect(callback).was.calledTwice();
         expect(food.get('name')).to.be.equal('pizza');
         done();
       });
+
       expect(food.fetch()).to.be.an('object');
 
     });

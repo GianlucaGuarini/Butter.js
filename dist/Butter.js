@@ -1,6 +1,6 @@
 /**
  * Butter.js
- * Version: 0.0.1-alpha.7
+ * Version: 0.0.1-alpha.8
  * Author: Gianluca Guarini
  * Contact: gianluca.guarini@gmail.com
  * Website: http://www.gianlucaguarini.com/
@@ -550,22 +550,24 @@
             _method: httpVerb
           }, data);
         }
-        this.isNew = false;
         ajax = $.ajax(_.extend({
           url: this.url,
           type: this.emulateHTTP ? httpVerb === 'GET' ? 'GET' : 'POST' : httpVerb,
           data: httpVerb === 'GET' ? null : JSON.stringify(data),
           dataType: 'json'
         }, options));
-        ajax.always(_.bind(this.events.push, this, 'sync'));
-        ajax.then(_.bind(function(data) {
+        ajax.always(_.bind(function() {
+          this.events.push('sync');
+        }, this));
+        ajax.success(_.bind(function(data) {
           if (httpVerb === 'GET') {
             this.update(data, 'read');
           } else {
             this.events.push(method);
           }
-        }, this), _.bind(this.events.error, this));
-        return ajax;
+        }, this));
+        ajax.fail(_.bind(this.events.error, this.events));
+        return new Bacon.fromPromise(ajax);
       },
       fetch: function(options) {
         return this.sync('read', options);

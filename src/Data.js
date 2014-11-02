@@ -169,7 +169,6 @@ define(function(require, exports, module) {
         }, data);
       }
 
-      this.isNew = false;
       ajax = $.ajax(_.extend({
         url: this.url,
         type: this.emulateHTTP ? (httpVerb === 'GET' ? 'GET' : 'POST') : httpVerb,
@@ -177,23 +176,26 @@ define(function(require, exports, module) {
         dataType: 'json'
       }, options));
 
+      // always
       ajax.always(
-        _.bind(this.events.push, this, 'sync')
+        _.bind(function() {
+          this.events.push('sync');
+        }, this)
       );
 
-      ajax.then(
-        _.bind(function(data) {
-          if (httpVerb === 'GET') {
-            this.update(data, 'read');
-          } else {
-            this.events.push(method);
-          }
-        }, this),
-        _.bind(this.events.error, this));
+      // success
+      ajax.success(_.bind(function(data) {
+        if (httpVerb === 'GET') {
+          this.update(data, 'read');
+        } else {
+          this.events.push(method);
+        }
+      }, this));
 
+      // error
+      ajax.fail(_.bind(this.events.error, this.events));
 
-
-      return ajax;
+      return new Bacon.fromPromise(ajax);
     },
     /**
      * Get the data directly from the server
