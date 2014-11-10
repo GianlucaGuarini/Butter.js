@@ -14,8 +14,8 @@ define(function(require, exports, module) {
         key;
 
       path = path.replace(/\[(\w+)\]/g, '.$1') // convert indexes to properties
-      .replace(/^\./, '') // strip a leading dot
-      .split('.');
+        .replace(/^\./, '') // strip a leading dot
+        .split('.');
 
       keyLength = path && path.length;
 
@@ -51,6 +51,9 @@ define(function(require, exports, module) {
     },
     isArray: function(value) {
       return _toString.call(value) === '[object Array]';
+    },
+    isRegExp: function(value) {
+      return _toString.call(value) === '[object RegExp]';
     },
     isFunction: function(value) {
       return typeof value === 'function';

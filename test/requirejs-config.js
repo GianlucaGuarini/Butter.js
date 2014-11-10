@@ -6,6 +6,7 @@ requirejs.config({
     simulant: '../node_modules/simulant/simulant',
     jquery: '../node_modules/jquery/dist/jquery',
     baconjs: '../node_modules/baconjs/dist/Bacon',
+    page: '../node_modules/page/page',
     butter: '../dist/Butter'
   },
   shim: {

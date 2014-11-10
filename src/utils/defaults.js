@@ -30,6 +30,9 @@ define(function(require, exports, module) {
     data: {
       maxStatesLength: 10,
       emulateHTTP: true
+    },
+    router: {
+
     }
   };
 });

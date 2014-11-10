@@ -1,6 +1,6 @@
 /**
  * Butter.js
- * Version: 0.0.1-alpha.8
+ * Version: 0.0.1-alpha.9
  * Author: Gianluca Guarini
  * Contact: gianluca.guarini@gmail.com
  * Website: http://www.gianlucaguarini.com/
@@ -68,7 +68,7 @@
     root.Butter = factory(Bacon, jQuery);
   }
 }(this, function(Bacon, $) {
-  var utils_helpers, utils_defaults, utils_mixins, utils_binders, Butter, _Data_, _View_, exports;
+  var utils_helpers, utils_defaults, utils_mixins, utils_binders, page, Butter, _Data_, _View_, _Router_, exports;
   utils_helpers = exports = function(exports) {
 
     var _toString = Object.prototype.toString,
@@ -106,6 +106,9 @@
       },
       isArray: function(value) {
         return _toString.call(value) === '[object Array]';
+      },
+      isRegExp: function(value) {
+        return _toString.call(value) === '[object RegExp]';
       },
       isFunction: function(value) {
         return typeof value === 'function';
@@ -270,7 +273,8 @@
       data: {
         maxStatesLength: 10,
         emulateHTTP: true
-      }
+      },
+      router: {}
     };
     return exports;
   }({});
@@ -452,6 +456,346 @@
     };
     return exports;
   }({});
+  ! function(e) {
+    if ('object' == typeof exports && 'undefined' != typeof module)
+      module.exports = e();
+    else if (true)
+      page = function() {
+        return typeof e === 'function' ? e() : e;
+      }();
+    else {
+      var f;
+      'undefined' != typeof window ? f = window : 'undefined' != typeof global ? f = global : 'undefined' != typeof self && (f = self), f.page = e();
+    }
+  }(function() {
+    var define, module, exports;
+    return function e(t, n, r) {
+      function s(o, u) {
+        if (!n[o]) {
+          if (!t[o]) {
+            var a = typeof require == 'function' && require;
+            if (!u && a)
+              return a(o, !0);
+            if (i)
+              return i(o, !0);
+            throw new Error('Cannot find module \'' + o + '\'');
+          }
+          var f = n[o] = {
+            exports: {}
+          };
+          t[o][0].call(f.exports, function(e) {
+            var n = t[o][1][e];
+            return s(n ? n : e);
+          }, f, f.exports, e, t, n, r);
+        }
+        return n[o].exports;
+      }
+      var i = typeof require == 'function' && require;
+      for (var o = 0; o < r.length; o++)
+        s(r[o]);
+      return s;
+    }({
+      1: [
+        function(_dereq_, module, exports) {
+          var pathtoRegexp = _dereq_('path-to-regexp');
+          module.exports = page;
+          var location = window.history.location || window.location;
+          var dispatch = true;
+          var base = '';
+          var running;
+          var hashbang = false;
+
+          function page(path, fn) {
+            if ('function' === typeof path) {
+              return page('*', path);
+            }
+            if ('function' === typeof fn) {
+              var route = new Route(path);
+              for (var i = 1; i < arguments.length; ++i) {
+                page.callbacks.push(route.middleware(arguments[i]));
+              }
+            } else if ('string' == typeof path) {
+              'string' === typeof fn ? page.redirect(path, fn) : page.show(path, fn);
+            } else {
+              page.start(path);
+            }
+          }
+          page.callbacks = [];
+          page.base = function(path) {
+            if (0 === arguments.length)
+              return base;
+            base = path;
+          };
+          page.start = function(options) {
+            options = options || {};
+            if (running)
+              return;
+            running = true;
+            if (false === options.dispatch)
+              dispatch = false;
+            if (false !== options.popstate)
+              window.addEventListener('popstate', onpopstate, false);
+            if (false !== options.click)
+              window.addEventListener('click', onclick, false);
+            if (true === options.hashbang)
+              hashbang = true;
+            if (!dispatch)
+              return;
+            var url = hashbang && location.hash.indexOf('#!') === 0 ? location.hash.substr(2) + location.search : location.pathname + location.search + location.hash;
+            page.replace(url, null, true, dispatch);
+          };
+          page.stop = function() {
+            running = false;
+            removeEventListener('click', onclick, false);
+            removeEventListener('popstate', onpopstate, false);
+          };
+          page.show = function(path, state, dispatch) {
+            var ctx = new Context(path, state);
+            if (false !== ctx.handled)
+              ctx.pushState();
+            if (false !== dispatch)
+              page.dispatch(ctx);
+            return ctx;
+          };
+          page.redirect = function(from, to) {
+            page(from, function(e) {
+              setTimeout(function() {
+                page.replace(to);
+              });
+            });
+          };
+          page.replace = function(path, state, init, dispatch) {
+            var ctx = new Context(path, state);
+            ctx.init = init;
+            ctx.save();
+            if (false !== dispatch)
+              page.dispatch(ctx);
+            return ctx;
+          };
+          page.dispatch = function(ctx) {
+            var i = 0;
+
+            function next() {
+              var fn = page.callbacks[i++];
+              if (!fn)
+                return unhandled(ctx);
+              fn(ctx, next);
+            }
+            next();
+          };
+
+          function unhandled(ctx) {
+            if (ctx.handled)
+              return;
+            var current = location.pathname + location.search;
+            if (current === ctx.canonicalPath)
+              return;
+            page.stop();
+            ctx.handled = false;
+            location.href = ctx.canonicalPath;
+          }
+
+          function Context(path, state) {
+            if ('/' === path[0] && 0 !== path.indexOf(base))
+              path = base + path;
+            var i = path.indexOf('?');
+            this.canonicalPath = path;
+            this.path = path.replace(base, '') || '/';
+            this.title = document.title;
+            this.state = state || {};
+            this.state.path = path;
+            this.querystring = ~i ? path.slice(i + 1) : '';
+            this.pathname = ~i ? path.slice(0, i) : path;
+            this.params = [];
+            this.hash = '';
+            if (!~this.path.indexOf('#'))
+              return;
+            var parts = this.path.split('#');
+            this.path = parts[0];
+            this.hash = parts[1] || '';
+            this.querystring = this.querystring.split('#')[0];
+          }
+          page.Context = Context;
+          Context.prototype.pushState = function() {
+            history.pushState(this.state, this.title, hashbang && this.canonicalPath !== '/' ? '#!' + this.canonicalPath : this.canonicalPath);
+          };
+          Context.prototype.save = function() {
+            history.replaceState(this.state, this.title, hashbang && this.canonicalPath !== '/' ? '#!' + this.canonicalPath : this.canonicalPath);
+          };
+
+          function Route(path, options) {
+            options = options || {};
+            this.path = path === '*' ? '(.*)' : path;
+            this.method = 'GET';
+            this.regexp = pathtoRegexp(this.path, this.keys = [], options.sensitive, options.strict);
+          }
+          page.Route = Route;
+          Route.prototype.middleware = function(fn) {
+            var self = this;
+            return function(ctx, next) {
+              if (self.match(ctx.path, ctx.params))
+                return fn(ctx, next);
+              next();
+            };
+          };
+          Route.prototype.match = function(path, params) {
+            var keys = this.keys,
+              qsIndex = path.indexOf('?'),
+              pathname = ~qsIndex ? path.slice(0, qsIndex) : path,
+              m = this.regexp.exec(decodeURIComponent(pathname));
+            if (!m)
+              return false;
+            for (var i = 1, len = m.length; i < len; ++i) {
+              var key = keys[i - 1];
+              var val = 'string' === typeof m[i] ? decodeURIComponent(m[i]) : m[i];
+              if (key) {
+                params[key.name] = undefined !== params[key.name] ? params[key.name] : val;
+              } else {
+                params.push(val);
+              }
+            }
+            return true;
+          };
+
+          function onpopstate(e) {
+            if (e.state) {
+              var path = e.state.path;
+              page.replace(path, e.state);
+            }
+          }
+
+          function onclick(e) {
+            if (1 != which(e))
+              return;
+            if (e.metaKey || e.ctrlKey || e.shiftKey)
+              return;
+            if (e.defaultPrevented)
+              return;
+            var el = e.target;
+            while (el && 'A' != el.nodeName)
+              el = el.parentNode;
+            if (!el || 'A' != el.nodeName)
+              return;
+            var link = el.getAttribute('href');
+            if (el.pathname === location.pathname && (el.hash || '#' === link))
+              return;
+            if (link && link.indexOf('mailto:') > -1)
+              return;
+            if (el.target)
+              return;
+            if (!sameOrigin(el.href))
+              return;
+            var path = el.pathname + el.search + (el.hash || '');
+            var orig = path + el.hash;
+            path = path.replace(base, '');
+            if (base && orig === path)
+              return;
+            e.preventDefault();
+            page.show(path);
+          }
+
+          function which(e) {
+            e = e || window.event;
+            return null === e.which ? e.button : e.which;
+          }
+
+          function sameOrigin(href) {
+            var origin = location.protocol + '//' + location.hostname;
+            if (location.port)
+              origin += ':' + location.port;
+            return href && 0 === href.indexOf(origin);
+          }
+          page.sameOrigin = sameOrigin;
+          return exports;
+        }, {
+          'path-to-regexp': 2
+        }
+      ],
+      2: [
+        function(_dereq_, module, exports) {
+          module.exports = pathtoRegexp;
+          var PATH_REGEXP = new RegExp([
+            '(\\\\.)',
+            '([\\/.])?(?:\\:(\\w+)(?:\\(((?:\\\\.|[^)])*)\\))?|\\(((?:\\\\.|[^)])*)\\))([+*?])?',
+            '([.+*?=^!:${}()[\\]|\\/])'
+          ].join('|'), 'g');
+
+          function escapeGroup(group) {
+            return group.replace(/([=!:$\/()])/g, '\\$1');
+          }
+          var attachKeys = function(re, keys) {
+            re.keys = keys;
+            return re;
+          };
+
+          function pathtoRegexp(path, keys, options) {
+            if (keys && !Array.isArray(keys)) {
+              options = keys;
+              keys = null;
+            }
+            keys = keys || [];
+            options = options || {};
+            var strict = options.strict;
+            var end = options.end !== false;
+            var flags = options.sensitive ? '' : 'i';
+            var index = 0;
+            if (path instanceof RegExp) {
+              var groups = path.source.match(/\((?!\?)/g) || [];
+              keys.push.apply(keys, groups.map(function(match, index) {
+                return {
+                  name: index,
+                  delimiter: null,
+                  optional: false,
+                  repeat: false
+                };
+              }));
+              return attachKeys(path, keys);
+            }
+            if (Array.isArray(path)) {
+              path = path.map(function(value) {
+                return pathtoRegexp(value, keys, options).source;
+              });
+              return attachKeys(new RegExp('(?:' + path.join('|') + ')', flags), keys);
+            }
+            path = path.replace(PATH_REGEXP, function(match, escaped, prefix, key, capture, group, suffix, escape) {
+              if (escaped) {
+                return escaped;
+              }
+              if (escape) {
+                return '\\' + escape;
+              }
+              var repeat = suffix === '+' || suffix === '*';
+              var optional = suffix === '?' || suffix === '*';
+              keys.push({
+                name: key || index++,
+                delimiter: prefix || '/',
+                optional: optional,
+                repeat: repeat
+              });
+              prefix = prefix ? '\\' + prefix : '';
+              capture = escapeGroup(capture || group || '[^' + (prefix || '\\/') + ']+?');
+              if (repeat) {
+                capture = capture + '(?:' + prefix + capture + ')*';
+              }
+              if (optional) {
+                return '(?:' + prefix + '(' + capture + '))?';
+              }
+              return prefix + '(' + capture + ')';
+            });
+            var endsWithSlash = path[path.length - 1] === '/';
+            if (!strict) {
+              path = (endsWithSlash ? path.slice(0, -2) : path) + '(?:\\/(?=$))?';
+            }
+            if (!end) {
+              path += strict && endsWithSlash ? '' : '(?=\\/|$)';
+            }
+            return attachKeys(new RegExp('^' + path + (end ? '$' : ''), flags), keys);
+          }
+          return exports;
+        }, {}
+      ]
+    }, {}, [1])(1);
+  });
   _Data_ = function(exports) {
 
     var _ = utils_helpers,
@@ -934,6 +1278,30 @@
     exports = View;
     return exports;
   }({});
+  _Router_ = function(exports) {
+
+    var _ = utils_helpers,
+      _binders = utils_binders,
+      _defaults = utils_defaults,
+      _mixins = utils_mixins,
+      _page = page,
+      Router = function() {
+        _.extend(this, _mixins);
+        return this;
+      };
+    Router.prototype = {
+      constructor: Router,
+      map: function(url) {
+        var stream = new Bacon.Bus();
+        _page(url, function(ctx) {
+          stream.push(ctx);
+        });
+        return stream;
+      }
+    };
+    exports = Router;
+    return exports;
+  }({});
   Butter = function(exports) {
 
     exports = {
@@ -941,8 +1309,10 @@
       defaults: utils_defaults,
       mixins: utils_mixins,
       binders: utils_binders,
+      history: page,
       Data: _Data_,
       View: _View_,
+      Router: _Router_,
       create: {
         View: function(options) {
           return new Butter.View(options);

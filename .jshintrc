@@ -28,6 +28,7 @@
     "expect":false,
     "mocha":false,
     "beforeEach": false,
-    "afterEach": false
+    "afterEach": false,
+    "page": true
   }
 }

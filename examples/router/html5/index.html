@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/json2/20130526/json2.js"></script>
+  <![endif]-->
+  <style>
+    ul {
+      float:left;
+    }
+  </style>
+  <base href="/Butter.js/examples/router/html5/" >
+</head>
+<body>
+  <a href="./bar">bar</a>
+  <a href="./foo/bar/">foo</a>
+  <a href="./baz">foo2</a>
+
+  <!-- Vendor -->
+  <script src="../../../node_modules/jquery/dist/jquery.js"></script>
+  <script src="../../../node_modules/baconjs/dist/Bacon.js"></script>
+  <script src="../../../node_modules/page/page.js"></script>
+
+  <script src="../../../dist/Butter.js"></script>
+  <h1>Check your console</h1>
+  <script>
+      var router = new Butter.Router();
+
+      router.map('/').onValue(function(){
+        console.log('index!');
+      });
+      router.map('/bar').log();
+      router.map('/baz').log();
+      router.map('/foo/:whatever').onValue(function(ctx){
+        console.log('url params: ' + ctx.params.whatever);
+      });
+
+      router.map('*').onValue(function(){
+        console.log('no routing path matched!');
+      });
+
+      Butter.history.base('/Butter.js/examples/router/html5');
+      Butter.history();
+
+      // uncomment to block the router
+      // Butter.history.stop();
+
+
+  </script>
+
+  </body>
+</html>

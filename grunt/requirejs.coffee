@@ -26,6 +26,7 @@ module.exports = (grunt, options) =>
     paths:
       jquery: '../node_modules/jquery/dist/jquery'
       baconjs: '../node_modules/baconjs/dist/Bacon'
+      page: '../node_modules/page/page'
     onModuleBundleComplete: (data) ->
       outputFile = data.path
       # use the amdclean to remove all the require functions
@@ -50,5 +51,5 @@ module.exports = (grunt, options) =>
     options:
       grunt.util._.extend({
         out: 'dist/Butter.min.js'
-        optimize: 'uglify2'
+        optimize: 'uglify'
       }, requirejsOptions)

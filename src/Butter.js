@@ -26,6 +26,12 @@ define(function(require, exports, module) {
      */
     binders: require('./utils/binders'),
     /**
+     * @module Butter.history
+     * It relies on page.js
+     * https://github.com/visionmedia/page.js
+     */
+    history: require('page'),
+    /**
      * @module Butter.Data
      */
     Data: require('./Data'),
@@ -33,6 +39,11 @@ define(function(require, exports, module) {
      * @module Butter.View
      */
     View: require('./View'),
+
+    /**
+     * @module Butter.Router
+     */
+    Router: require('./Router'),
     /**
      * Handy helper to create new Butter instances
      */

@@ -1,6 +1,6 @@
 {
   "name": "butter",
-  "version": "0.0.1-alpha.8",
+  "version": "0.0.1-alpha.9",
   "description": "The reactive programming framework that will make your code tastier",
   "main": "index.js",
   "scripts": {
@@ -55,7 +55,9 @@
   "homepage": "https://github.com/bagel-framework/Butter.js",
   "dependencies": {
     "baconjs": "^0.7.28",
-    "jquery": "^1.1.1"
+    "g": "^1.0.2",
+    "jquery": "^1.1.1",
+    "page": "git+https://github.com/visionmedia/page.js.git"
   },
   "repository": {
     "type": "git",
