@@ -229,7 +229,7 @@ define(function(require, exports, module) {
         mustUpdate = false;
 
       // do we need to update a deep attribute?
-      if (args.length === 2 && _.isString(args[0]) && args[1]) {
+      if (args.length === 2 && _.isString(args[0]) && !_.isUndefined(args[1])) {
 
         // update the deep value or return false
         mustUpdate = _.setObjectValueByPath(attributes, args[0], args[1]);

@@ -15,6 +15,16 @@
 <body>
   <div id="test">
     <input type="text" data-value="values.0.name" />
+    <input type="text" data-value="values.0.name" />
+
+    <div data-if="values.2.name" />
+      Hello <span data-text="values.2.name"></span>
+    </div>
+
+    <div data-unless="values.2.name" />
+      No value for the values.2.name!
+    </div>
+
     <ul>
       <li data-each="values as data">
         <input type="text" data-value="data.name" />
@@ -33,12 +43,11 @@
   <!-- Vendor -->
   <script src="../../node_modules/jquery/dist/jquery.js"></script>
   <script src="../../node_modules/baconjs/dist/Bacon.js"></script>
-  <script src="../../node_modules/repage/repage.js"></script>
 
   <script src="../../dist/Butter.js"></script>
 
   <script>
-      console.time("DOM update");
+      //console.time("DOM update");
       var
         view = new Butter.View({
         el: '#test',
@@ -95,7 +104,7 @@
 
       view.render();
 
-      console.timeEnd("DOM update");
+      //console.timeEnd("DOM update");
 
   </script>
   </body>

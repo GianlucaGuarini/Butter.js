@@ -30,7 +30,7 @@ define(function(require, exports, module) {
      * It relies on page.js
      * https://github.com/visionmedia/page.js
      */
-    history: require('page'),
+    history: require('./utils/history'),
     /**
      * @module Butter.Data
      */

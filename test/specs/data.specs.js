@@ -49,6 +49,8 @@ define(function(require) {
 
       food.set('mushroom', '1up');
       expect(food.get('mushroom')).to.be.equal('1up');
+      food.set('mushroom','');
+      expect(food.get('mushroom')).to.be.equal('');
       food.set({
         mushroom: '1down',
         ingredients: 'nope'

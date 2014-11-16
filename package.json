@@ -1,6 +1,6 @@
 {
   "name": "butter",
-  "version": "0.0.1-alpha.9",
+  "version": "0.0.1-alpha.10",
   "description": "The reactive programming framework that will make your code tastier",
   "main": "index.js",
   "scripts": {
@@ -20,7 +20,7 @@
     "grunt-contrib-connect": "^0.8.0",
     "grunt-contrib-copy": "*",
     "grunt-contrib-jshint": "*",
-    "grunt-contrib-requirejs": "*",
+    "grunt-contrib-requirejs": "^0.4.4",
     "grunt-contrib-watch": "*",
     "grunt-gh-pages": "*",
     "grunt-jsbeautifier": "*",
@@ -54,10 +54,8 @@
   },
   "homepage": "https://github.com/bagel-framework/Butter.js",
   "dependencies": {
-    "baconjs": "^0.7.28",
-    "g": "^1.0.2",
-    "jquery": "^1.1.1",
-    "page": "git+https://github.com/visionmedia/page.js.git"
+    "baconjs": "^0.7.33",
+    "jquery": "^1.11.1"
   },
   "repository": {
     "type": "git",

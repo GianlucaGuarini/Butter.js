@@ -184,13 +184,13 @@ define(function(require, exports, module) {
 
       if (!result || !result.value) return;
 
-      if (value !== null && value !== undefined) {
-        result.value[result.lastKey] = value;
-        return result.value;
-      } else {
+      if (value === null) {
         result.value[result.lastKey] = null;
         delete result.value[result.lastKey];
         return true;
+      } else {
+        result.value[result.lastKey] = value;
+        return result.value;
       }
 
     }

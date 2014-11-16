@@ -7,7 +7,7 @@ define(function(require, exports, module) {
     _binders = require('./utils/binders'),
     _defaults = require('./utils/defaults'),
     _mixins = require('./utils/mixins'),
-    _page = require('page'),
+    _page = require('./utils/history'),
     Router = function() {
       // extend this class with the default mixins used for any Butter class
       _.extend(this, _mixins);

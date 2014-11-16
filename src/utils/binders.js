@@ -5,6 +5,9 @@ define(function(require, exports, module) {
       _.each(listeners, function(listener) {
         listener();
       });
+    },
+    _addMarker = function() {
+      return $('<script type="text/bacon-marker"></script>');
     };
   /**
    * @module Butter.binders
@@ -102,6 +105,62 @@ define(function(require, exports, module) {
       };
     },
     /**
+     * Remove/show the element from the DOM if bound to a truthy property
+     * [data-if] binder
+     */
+    'if': function($el, data, path, inverse) {
+      var listener,
+        markerVisible = false,
+        $marker = _addMarker(),
+        showMarker = function() {
+          if (!markerVisible) {
+            markerVisible = true;
+            $el.replaceWith($marker);
+          }
+        },
+        hideMarker = function() {
+          if (markerVisible) {
+            markerVisible = false;
+            $marker.replaceWith($el);
+          }
+        };
+      return {
+        deferred: true,
+        get: function() {
+          var onChange = function(value) {
+            if (value) {
+              if (inverse) {
+                showMarker();
+              } else {
+                hideMarker();
+              }
+            } else {
+              if (inverse) {
+                hideMarker();
+              } else {
+                showMarker();
+              }
+            }
+          };
+          listener = data.listen(path).debounce(50).onValue(onChange);
+          onChange(data.get(path));
+        },
+        bind: function() {
+          this.get();
+        },
+        unbind: function() {
+          listener();
+        }
+      };
+    },
+    /**
+     * Remove/show the element from the DOM if bound to a falsy property
+     * [data-unless] binder
+     */
+    unless: function($el, data, path) {
+      return this.show($el, data, path, true);
+    },
+    /**
      * Display the element if bound to a truthy property
      * [data-show] binder
      */
@@ -195,7 +254,7 @@ define(function(require, exports, module) {
      */
     'value': function($el, data, path) {
       var listeners = [],
-        events = $el.asEventStream('input change copy paste');
+        events = $el.asEventStream('input change copy paste keyup');
       return {
         get: function() {
           listeners.push(

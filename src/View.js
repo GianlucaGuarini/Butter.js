@@ -46,7 +46,7 @@ define(function(require, exports, module) {
       if (data && data instanceof Butter.Data) {
         this.data = data;
       } else {
-        this.data = new Butter.Data(this.data);
+        this.data = new Butter.Data(this.data || {});
         if (this.destroyDatasCreated) {
           this.destroyDataOnRemove = true;
         }
@@ -234,13 +234,60 @@ define(function(require, exports, module) {
      */
     bind: function() {
       var self = this,
-        defeferredBinders = [];
+        defeferredBinders = [],
+        initBinder = function($el, selector, binderType) {
+          var path = $el.attr(selector),
+            binder;
+
+          if (!path) return;
+
+          // replace the placeholder paths with the correct ones
+          if (self.placeholderPath && self.bindingPath) {
+            path = path.replace(self.placeholderPath, self.bindingPath);
+          }
+
+          // Clean up the string
+          // here could really come anything
+          // let's be sure we remove the shit from here
+          path = path.replace(/[\n\r]+/g, '')
+            .replace(/^\s\s*/, '')
+            .replace(/\s\s*$/, '');
+
+          binder = _binders[binderType]($el, self.data, path);
+
+          if (!binder.deferred) {
+            binder.bind();
+          } else {
+            defeferredBinders.push(binder);
+          }
+
+          self.binders.push(binder.unbind);
+
+        };
 
       this.unbind();
 
       // bind all the subviews
       _.each(this.subviews, function(subview) {
         subview.bind();
+      });
+
+      // Set the DOM binders parsing the view html
+      _.each(_binders, function(binderType) {
+
+        var selector = this.binderSelector + binderType;
+
+        this.$('[' + selector + ']').each(function() {
+          initBinder($(this), selector, binderType);
+        });
+
+        // Check also the view el binders
+        initBinder(this.$el, selector, binderType);
+
+      }, this);
+
+      _.each(defeferredBinders, function(binder) {
+        binder.bind();
       });
 
       // Bind the view events
@@ -254,60 +301,6 @@ define(function(require, exports, module) {
           throw new Error('You must specify an event name for each event assigned to this view');
         }
       }, this);
-
-      // Set the DOM binders parsing the view html
-      _.each(_binders, function(binderType) {
-
-        var selector = this.binderSelector + binderType,
-          createBinder = function(pathAttribute) {
-            var $el = $(this),
-              path = pathAttribute || $el.attr(selector),
-              binder;
-            // replace the placeholder paths with the correct ones
-            if (self.placeholderPath && self.bindingPath) {
-              path = path.replace(self.placeholderPath, self.bindingPath);
-            }
-
-            if (!path) {
-              throw new Error('The path to the data values is missing on the element ' + this);
-            }
-
-            // Clean up the string
-            // here could really come anything
-            // let's be sure we remove the shit from here
-            path = path.replace(/[\n\r]+/g, '')
-              .replace(/^\s\s*/, '')
-              .replace(/\s\s*$/, '');
-
-            binder = _binders[binderType]($el, self.data, path);
-
-            if (!binder.deferred) {
-              binder.bind();
-            } else {
-              defeferredBinders.push(binder);
-            }
-
-            self.binders.push(binder.unbind);
-
-          };
-
-        this.$('[' + selector + ']').each(createBinder);
-
-        // Check also the view el binders
-        var viewElementAttribute = this.$el.attr(selector);
-        // if this.$el has also the binder attribute
-        if (viewElementAttribute) {
-          // we bind it
-          createBinder.call(this.el, viewElementAttribute);
-        }
-
-      }, this);
-
-      _.each(defeferredBinders, function(binder) {
-        binder.bind();
-      });
-
-
 
       return this;
     },
