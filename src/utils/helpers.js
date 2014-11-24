@@ -56,7 +56,7 @@ define(function(require, exports, module) {
       return _toString.call(value) === '[object RegExp]';
     },
     isFunction: function(value) {
-      return typeof value === 'function';
+      return _toString.call(value) === '[object Function]';
     },
     isUndefined: function(value) {
       return typeof value === 'undefined';
