@@ -38,13 +38,13 @@ define(function(require, exports, module) {
   /**
    * @module Butter.helpers
    */
-  var helpers = {
+  var _ = {
     $: $,
     isBoolean: function(value) {
       return typeof value === 'boolean';
     },
     isObject: function(value) {
-      return _toString.call(value) === '[object Object]' && !helpers.isUndefined(value);
+      return _toString.call(value) === '[object Object]' && !_.isUndefined(value) && value !== null;
     },
     isString: function(value) {
       return typeof value === 'string';
@@ -62,12 +62,10 @@ define(function(require, exports, module) {
       return typeof value === 'undefined';
     },
     isEqual: function(value1, value2) {
-      /*console.log(JSON.stringify(value1) + '===' + JSON.stringify(value2));
-      console.log(JSON.stringify(value1) === JSON.stringify(value2));*/
       return JSON.stringify(value1) === JSON.stringify(value2);
     },
     isEmpty: function(value) {
-      if (helpers.isObject) {
+      if (_.isObject(value)) {
         return JSON.stringify(value).length === 2;
       } else {
         return value.length === 0;
@@ -83,18 +81,18 @@ define(function(require, exports, module) {
       var self = this,
         result = false;
 
-      if (!helpers.isEqual(value1, value2)) {
+      if (!_.isEqual(value1, value2)) {
         result = value1;
-        if (helpers.isArray(value1)) {
+        if (_.isArray(value1)) {
           result = [];
-          helpers.each(value1, function(value) {
+          _.each(value1, function(value) {
             if (!self.contains(value2, value)) {
               result.push(value);
             }
           });
-        } else if (helpers.isObject(value1)) {
+        } else if (_.isObject(value1)) {
           result = {};
-          helpers.each(value1, function(key, value) {
+          _.each(value1, function(key, value) {
             if (!value2[key]) {
               result[key] = value;
             }
@@ -104,23 +102,23 @@ define(function(require, exports, module) {
       return result;
     },
     clone: function(element) {
-      if (helpers.isArray(element) || helpers.isObject(element)) {
+      if (_.isArray(element) || _.isObject(element)) {
         return JSON.parse(JSON.stringify(element));
       } else {
         return element;
       }
     },
     contains: function(array, value) {
-      return !!~helpers.indexOf(array, value);
+      return !!~_.indexOf(array, value);
     },
     indexOf: function(array, value) {
       var result = -1,
         i = 0,
         arrayLength = array.length;
 
-      if (helpers.isObject(value)) {
+      if (_.isObject(value)) {
         for (; i < arrayLength; i++) {
-          if (helpers.isEqual(array[i], value)) {
+          if (_.isEqual(array[i], value)) {
             result = i;
             break;
           }
@@ -136,7 +134,7 @@ define(function(require, exports, module) {
     },
     each: function(iterator, callback, context) {
       var self = this,
-        isObject = helpers.isObject(iterator);
+        isObject = _.isObject(iterator);
 
       context = context || callback.prototype;
 
@@ -148,7 +146,7 @@ define(function(require, exports, module) {
             callback.apply(context, [key, iterator[key]]);
           });
         } else {
-          _each.call(iterator, helpers.bind(callback, context));
+          _each.call(iterator, _.bind(callback, context));
         }
       } else {
         $.each(iterator, function(i, element) {
@@ -160,7 +158,7 @@ define(function(require, exports, module) {
       var keys = [];
       for (var prop in obj) {
         if (obj.hasOwnProperty(prop)) {
-          keys.push(obj[prop]);
+          keys.push(prop);
         }
       }
 
@@ -196,6 +194,6 @@ define(function(require, exports, module) {
     }
   };
 
-  module.exports = helpers;
+  module.exports = _;
 
 });

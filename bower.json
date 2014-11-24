@@ -1,13 +1,13 @@
 {
     "name": "Butter.js",
     "main": "dist/Butter.js",
-    "version": "0.0.1-alpha.10",
+    "version": "0.0.1-alpha.11",
     "homepage": "https://github.com/bagel-framework/Butter.js",
     "authors": [
         "Gianluca Guarini (http://gianlucaguarini.com/)"
     ],
     "dependencies": {
-        "baconjs": "^0.7.33",
+        "baconjs": "^0.7.35",
         "jquery": "^1.11.1"
     },
     "description": "The reactive programming framework that will make your code tastier",

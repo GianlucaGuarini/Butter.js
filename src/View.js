@@ -41,12 +41,14 @@ define(function(require, exports, module) {
      */
     setData: function(data) {
 
-      if (!this.options) return this;
+      if (this.data && this.destroyDataOnRemove && this.data instanceof Butter.Data) {
+        this.data.destroy();
+      }
 
       if (data && data instanceof Butter.Data) {
         this.data = data;
       } else {
-        this.data = new Butter.Data(this.data || {});
+        this.data = new Butter.Data(data || {});
         if (this.destroyDatasCreated) {
           this.destroyDataOnRemove = true;
         }
@@ -127,7 +129,6 @@ define(function(require, exports, module) {
      * @param  { Object } subview: Butter.View instance
      */
     insertSubviews: function(subviews) {
-
 
       _.each(subviews, function(subviewObj) {
 

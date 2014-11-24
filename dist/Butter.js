@@ -1,6 +1,6 @@
 /**
  * Butter.js
- * Version: 0.0.1-alpha.10
+ * Version: 0.0.1-alpha.11
  * Author: Gianluca Guarini
  * Contact: gianluca.guarini@gmail.com
  * Website: http://www.gianlucaguarini.com/
@@ -120,7 +120,7 @@
         return JSON.stringify(value1) === JSON.stringify(value2);
       },
       isEmpty: function(value) {
-        if (helpers.isObject) {
+        if (this.isObject(value)) {
           return JSON.stringify(value).length === 2;
         } else {
           return value.length === 0;
@@ -1117,12 +1117,13 @@
     View.prototype = {
       constructor: View,
       setData: function(data) {
-        if (!this.options)
-          return this;
+        if (this.data && this.destroyDataOnRemove && this.data instanceof Butter.Data) {
+          this.data.destroy();
+        }
         if (data && data instanceof Butter.Data) {
           this.data = data;
         } else {
-          this.data = new Butter.Data(this.data || {});
+          this.data = new Butter.Data(data || {});
           if (this.destroyDatasCreated) {
             this.destroyDataOnRemove = true;
           }

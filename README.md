@@ -1,6 +1,6 @@
 #![Butter.js logo](https://raw.githubusercontent.com/bagel-framework/Butter.js/master/logos/logo.png)
 
-Functional Reactive Progamming Javascript Framework
+MVW Functional Reactive Progamming Javascript Framework
 
 =========
 
@@ -11,9 +11,25 @@ Functional Reactive Progamming Javascript Framework
 
 Work in progress... stay tuned!
 
+# Documentation
+
+## Butter.View
+
+The Butter.View class keeps your DOM elements always in sync with your application data.
+
+```javascript
+var view = new Butter.View({
+	el: '#myView'
+}
+});
+```
+
+## Butter.Data
+
 # What is the Functional Reactive Programming?!
 If you don't know what it is the "Functional Reactive Programming" paradigm please check the following video first:
 
 [![An Introduction to Functional Reactive Programming](http://img.youtube.com/vi/ZOCCzDNsAtI/hqdefault.jpg)](https://www.youtube.com/watch?v=ZOCCzDNsAtI)
+
 
 
