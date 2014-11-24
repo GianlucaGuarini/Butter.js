@@ -21,7 +21,6 @@ The Butter.View class keeps your DOM elements always in sync with your applicati
 ```javascript
 var view = new Butter.View({
 	el: '#myView'
-}
 });
 ```
 
