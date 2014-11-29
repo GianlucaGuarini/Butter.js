@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+
+  <base href="/Butter.js/examples/router/html5/" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/json2/20130526/json2.js"></script>
+  <![endif]-->
+</head>
+<body>
+
+  <a href="./">index</a>
+  <a href="./hello">hello</a>
+  <a href="./hello/there/">hello/there</a>
+  <a href="./whathever">not found</a>
+
+  <h1>Check your console</h1>
+  <div id="test">
+    <p data-text="content"><p>
+  </div>
+
+  <!-- Vendor -->
+  <script src="../../../node_modules/jquery/dist/jquery.js"></script>
+  <script src="../../../node_modules/baconjs/dist/Bacon.js"></script>
+  <script src="../../../dist/Butter.js"></script>
+
+  <script>
+      var router = new Butter.Router(),
+          view = new Butter.View({
+            el: '#test'
+          });
+
+      router.map('/').onValue(function(){
+        view.data.set('content','Index');
+      });
+
+      // Optional param
+      router.map('/hello/:msg?').onValue(function(data){
+        view.data.set('content','Hello ' + (data.params.msg || ''));
+      });
+
+      router.map('*').onValue(function(){
+         view.data.set('content','not found!');
+      });
+
+      Butter.history.base('/Butter.js/examples/router/html5');
+      Butter.history.start();
+
+      view.render();
+
+      // uncomment to block the router
+      // Butter.history.stop();
+
+
+  </script>
+
+  </body>
+</html>

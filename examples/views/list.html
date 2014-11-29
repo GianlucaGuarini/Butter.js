@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/json2/20130526/json2.js"></script>
+  <![endif]-->
+  <style>
+    ul {
+      float:left;
+    }
+  </style>
+</head>
+<body>
+  <div id="test">
+    <input type="text" data-value="values.0.name" />
+    <input type="text" data-value="values.0.name" />
+
+    <div data-if="values.2.name" />
+      Hello <span data-text="values.2.name"></span>
+    </div>
+
+    <div data-unless="values.2.name" />
+      No value for the values.2.name!
+    </div>
+
+    <ul>
+      <li data-each="values as data">
+        <input type="text" data-value="data.name" />
+        <span data-text="data.name"></span>
+        <span data-show="data.active"> I am active!</span>
+        <span data-hide="data.active"> I am disabled!</span>
+      </li>
+    </ul>
+    <button class="add">Add item</button>
+    <button class="remove">Remove Item</button>
+    <textarea>
+
+    </textarea>
+  </div>
+
+  <!-- Vendor -->
+  <script src="../../node_modules/jquery/dist/jquery.js"></script>
+  <script src="../../node_modules/baconjs/dist/Bacon.js"></script>
+
+  <script src="../../dist/Butter.js"></script>
+
+  <script>
+      //console.time("DOM update");
+      var
+        view = new Butter.View({
+        el: '#test',
+        events:[{
+          type: 'click',
+          name: 'onAddItem',
+          el:'.add'
+        },{
+          type: 'click',
+          name: 'onRemoveItem',
+          el:'.remove'
+        },{
+          type: 'keyup',
+          name: 'onTextareaChange',
+          el: 'textarea'
+        }],
+        data: {},
+        afterRender: function () {
+          var self = this;
+
+          this.data.changes.debounce(3000).onValue(function(val){
+            this.$('textarea').val(self.data.toString());
+          });
+        },
+        methods: {
+          onRemoveItem: function () {
+            this.data.remove(
+                this.data.get('values.' + (this.data.get('values').length - 1)),
+                'values'
+            );
+          },
+          onAddItem: function () {
+            this.data.add({
+                name: 'name' + (this.data.get('values').length + 1)
+            },'values');
+          },
+          onTextareaChange: function (e) {
+            this.data.set(JSON.parse($(e.currentTarget).val()));
+          }
+        },
+      }),
+        i = 0,
+        ITEMS_COUNT = 10,
+        values = [];
+
+      while (i++ < ITEMS_COUNT) {
+        values.push({
+          name: 'name' + i,
+          active: false
+        });
+      }
+
+      view.data.set('values',values);
+
+      view.render();
+
+      //console.timeEnd("DOM update");
+
+  </script>
+  </body>
+</html>

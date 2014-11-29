@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/json2/20130526/json2.js"></script>
+  <![endif]-->
+  <style>
+
+    .ball {
+      position: absolute;
+      margin-top: 150px;
+      margin-left: 150px;
+      width:30px;
+      height:30px;
+      background: #333;
+      border-radius:30px;
+      position: absolute;
+    }
+    section {
+      float:left;
+      width:200px;
+      height: 200px;
+      position: relative;
+    }
+  </style>
+
+</head>
+<body>
+
+  <div id="test">
+  </div>
+  <script type="text/template" id="template">
+    <div data-css="x as left and y as top" class="ball"></div>
+  </script>
+
+  <!-- Vendor -->
+  <script src="../../node_modules/jquery/dist/jquery.js"></script>
+  <script src="../../node_modules/baconjs/dist/Bacon.js"></script>
+  <script src="../../node_modules/repage/repage.js"></script>
+
+  <script src="../../dist/Butter.js"></script>
+
+  <script>
+      //console.time("DOM update");
+
+      var view,
+          data = new Butter.Data({
+              x: 0,
+              y: 0
+          }),
+          subviews = [];
+
+      for (var i = 0; i < 50; i ++) {
+        subviews.push({
+          '':new Butter.View({
+            data: data,
+            tagName: 'section',
+            template: '#template'
+          })
+        });
+      }
+
+      view = new Butter.View({
+        el: '#test',
+        views: subviews,
+        data: data,
+        afterRender: function () {
+          var self = this,
+              time;
+
+          setInterval(function(){
+            time = new Date().getTime() * 0.005;
+            self.data.set({
+              x: Math.sin(time) * 100,
+              y: Math.cos(time) * 100
+            });
+          }, 1000 / 33);
+        }
+      });
+
+      view.render();
+
+      //console.timeEnd("DOM update");
+
+  </script>
+  </body>
+</html>
