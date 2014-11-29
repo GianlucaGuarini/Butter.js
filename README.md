@@ -13,7 +13,7 @@ __Work in progress... stay tuned!__
 
 [![MIT License][license-image]][license-url]
 
-[![Sauce Test Status][https://saucelabs.com/browser-matrix/butter.svg]](https://saucelabs.com/u/butter)
+[![Sauce Test Status][saucelabs-image]][saucelabs-url]
 
 
 # Documentation
@@ -85,6 +85,9 @@ If you don't know what it is the "Functional Reactive Programming" paradigm plea
 
 [travis-url]:https://travis-ci.org/bagel-framework/Butter.js.svg?branch=master
 [travis-image]: https://img.shields.io/travis/bagel-framework/Butter.js.svg?style=flat-square
+
+[saucelabs-image]:https://saucelabs.com/browser-matrix/butter.svg
+[saucelabs-url]:https://saucelabs.com/u/butter
 
 [license-url]: LICENSE
 [license-image]: http://img.shields.io/badge/license-MIT-000000.svg?style=flat-square
