@@ -23,19 +23,20 @@ __Work in progress... stay tuned!__
 
 The Butter.View class keeps your DOM elements always in sync with your application data.
 
-```html
+### Example
 
+#### HTML
+```html
+<!-- this html will be always in sync with your view data -->
 <ul id="toast">
   <li data-each="ingredients as ingredient">
     <span data-text="ingredient"></span>
   </li>
 </ul>
-
 ```
-
+#### javascript
 ```javascript
-
-var view = new Butter.View({
+new Butter.View({
 	el: '#toast',
 	data: {
       ingredients: [
@@ -43,10 +44,19 @@ var view = new Butter.View({
         "marmalade"
       ]
     }
-});
+}).render();
+```
 
-view.render();
-
+#### Result
+```html
+<ul id="toast">
+  <li>
+    <span data-text="ingredient">butter</span>
+  </li>
+  <li>
+    <span data-text="ingredient">marmalade</span>
+  </li>
+</ul>
 ```
 
 ## Butter.Data
