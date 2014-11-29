@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/json2/20130526/json2.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+
+    <ul id="toast">
+      <li data-each="ingredients as ingredient">
+        <span data-text="ingredient"></span>
+      </li>
+    </ul>
+
+    <!-- Vendor -->
+    <script src="../../node_modules/jquery/dist/jquery.js"></script>
+    <script src="../../node_modules/baconjs/dist/Bacon.js"></script>
+
+    <script src="../../dist/Butter.js"></script>
+
+    <script>
+
+      var view = new Butter.View({
+        el: '#toast',
+        data: {
+          ingredients: [
+            'butter',
+            'marmalade'
+          ]
+        }
+      });
+
+      view.render();
+
+    </script>
+  </body>
+  </html>
