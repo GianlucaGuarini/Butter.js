@@ -46,7 +46,7 @@
   "githubProjectName": "Butter.js",
   "twitterUsername": "gianlucaguarini",
   "authorHomepage": "gianlucaguarini.com",
-  "analyticsId": "UA-XXXX-XX",
+  "analyticsId": "UA-8059670-3",
   "license": "MIT",
   "directories": {
     "example": "examples",
@@ -54,7 +54,7 @@
   },
   "homepage": "https://github.com/bagel-framework/Butter.js",
   "dependencies": {
-    "baconjs": "^0.7.35",
+    "baconjs": "^0.7.37",
     "jquery": "^1.11.1"
   },
   "repository": {

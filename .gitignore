@@ -22,4 +22,8 @@ test/coverage
 
 # we don't need to push these files
 # they will be copied by the grunt copy task
-gh-pages/assets/dist
+gh-pages/**
+!gh-pages/template.jst
+!gh-pages/config.rb
+!gh-pages/assets
+

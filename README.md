@@ -4,7 +4,7 @@ MVW - Functional Reactive Progamming Javascript Framework build with [Bacon.js](
 
 __Work in progress... stay tuned!__
 
-[![Build Status][travis-image]]([travis-url])
+[![Build Status][travis-image]][travis-url]
 [![Coverage Status][coveralls-image]][coveralls-url]
 
 [![Dependency Status][gemnasium-image]][gemnasium-url]
@@ -13,9 +13,8 @@ __Work in progress... stay tuned!__
 
 [![MIT License][license-image]][license-url]
 
-<a href="https://saucelabs.com/u/butter" target="_blank">
-	<img width="100%" alt="Sauce Test Status" src="https://saucelabs.com/browser-matrix/butter.svg" />
-</a>
+[![Sauce Test Status][https://saucelabs.com/browser-matrix/butter.svg]](https://saucelabs.com/u/butter)
+
 
 # Documentation
 
@@ -46,20 +45,28 @@ new Butter.View({
     }
 }).render();
 ```
+#### [Result](http://bagel-framework.github.io/Butter.js/examples/views/simple.html)
 
-#### Result
-```html
-<ul id="toast">
-  <li>
-    <span data-text="ingredient">butter</span>
-  </li>
-  <li>
-    <span data-text="ingredient">marmalade</span>
-  </li>
-</ul>
-```
+### Other Live Examples
+
+- [css binding](http://bagel-framework.github.io/Butter.js/examples/views/ball.html)
+- [dynamic list](http://bagel-framework.github.io/Butter.js/examples/views/list.html)
+- [subviews injection](http://bagel-framework.github.io/Butter.js/examples/views/subviews.html)
+
+### Methods
 
 ## Butter.Data
+
+### Methods
+
+## Butter.Router
+
+### Other Live Examples
+
+- [html5 push navigation](http://bagel-framework.github.io/Butter.js/examples/router/html5/)
+- [hashbangs](http://bagel-framework.github.io/Butter.js/examples/router/hashbangs/)
+
+### Methods
 
 # What is the Functional Reactive Programming?!
 If you don't know what it is the "Functional Reactive Programming" paradigm please check the following video first:

@@ -48,7 +48,7 @@ module.exports = (grunt) ->
     'copy'
     'compass'
     'gh-pages'
-    'clean:gh-pages'
+    'clean:pages'
   ]
 
   grunt.registerTask 'doc', [

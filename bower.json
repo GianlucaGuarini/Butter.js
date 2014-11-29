@@ -7,7 +7,7 @@
         "Gianluca Guarini (http://gianlucaguarini.com/)"
     ],
     "dependencies": {
-        "baconjs": "^0.7.35",
+        "baconjs": "^0.7.37",
         "jquery": "^1.11.1"
     },
     "description": "The reactive programming framework that will make your code tastier",

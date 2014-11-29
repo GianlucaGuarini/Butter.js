@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Butter</title>
+  <title>butter</title>
   <meta charset="UTF-8" />
   <link rel="stylesheet" href="assets/css/style.css">
   <link rel="stylesheet" href="http://highlightjs.org/static/styles/github.css">
@@ -11,7 +11,7 @@
   <script type="text/javascript">
 
       var _gaq = _gaq || [];
-      _gaq.push(['_setAccount', 'UA-XXXX-XX']);
+      _gaq.push(['_setAccount', 'UA-8059670-3']);
       _gaq.push(['_trackPageview']);
 
       (function() {
@@ -29,9 +29,9 @@
   <div role="main" class="row">
 
     <h1>
-      Butter
+      butter
       v
-      0.0.1-alpha</h1>
+      0.0.1-alpha.11</h1>
     <p>
       The reactive programming framework that will make your code tastier
       </p>
@@ -46,12 +46,61 @@
     
 
     
-      <a href="https://twitter.com/share" class="twitter-share-button" data-text="Butter - The reactive programming framework that will make your code tastier" data-via="gianlucaguarini" data-size="large">Tweet</a>
+      <a href="https://twitter.com/share" class="twitter-share-button" data-text="butter - The reactive programming framework that will make your code tastier" data-via="gianlucaguarini" data-size="large">Tweet</a>
       <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
     
 
-    <h1 id="butter-js">Butter.js</h1>
-<p>Stay tuned! Work in progress</p>
+    <h1 id="-butter-js-logo-https-raw-githubusercontent-com-bagel-framework-butter-js-master-logos-logo-png-"><img src="https://raw.githubusercontent.com/bagel-framework/Butter.js/master/logos/logo.png" alt="Butter.js logo"></h1>
+<p>MVW - Functional Reactive Progamming Javascript Framework build with <a href="https://github.com/baconjs/bacon.js">Bacon.js</a></p>
+<p><strong>Work in progress... stay tuned!</strong></p>
+<p><a href="https://travis-ci.org/bagel-framework/Butter.js.svg?branch=master"><img src="https://img.shields.io/travis/bagel-framework/Butter.js.svg?style=flat-square" alt="Build Status"></a>
+<a href="https://coveralls.io/r/bagel-framework/Butter.js"><img src="https://img.shields.io/coveralls/bagel-framework/Butter.js.svg?style=flat-square" alt="Coverage Status"></a></p>
+<p><a href="https://gemnasium.com/bagel-framework/Butter.js"><img src="https://img.shields.io/gemnasium/bagel-framework/Butter.js.svg?style=flat-square" alt="Dependency Status"></a>
+<a href="https://npmjs.org/package/butter"><img src="http://img.shields.io/npm/v/butter.svg?style=flat-square" alt="NPM version"></a>
+<a href="https://npmjs.org/package/butter"><img src="http://img.shields.io/npm/dm/butter.svg?style=flat-square" alt="NPM downloads"></a></p>
+<p><a href="LICENSE"><img src="http://img.shields.io/badge/license-MIT-000000.svg?style=flat-square" alt="MIT License"></a></p>
+<p><a href="https://saucelabs.com/u/butter">![Sauce Test Status][<a href="https://saucelabs.com/browser-matrix/butter.svg">https://saucelabs.com/browser-matrix/butter.svg</a>]</a></p>
+<h1 id="documentation">Documentation</h1>
+<h2 id="butter-view">Butter.View</h2>
+<p>The Butter.View class keeps your DOM elements always in sync with your application data.</p>
+<h3 id="example">Example</h3>
+<h4 id="html">HTML</h4>
+<pre><code class="lang-html">&lt;!-- this html will be always in sync with your view data --&gt;
+&lt;ul id=&quot;toast&quot;&gt;
+  &lt;li data-each=&quot;ingredients as ingredient&quot;&gt;
+    &lt;span data-text=&quot;ingredient&quot;&gt;&lt;/span&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;</code></pre>
+<h4 id="javascript">javascript</h4>
+<pre><code class="lang-javascript">new Butter.View({
+    el: &#39;#toast&#39;,
+    data: {
+      ingredients: [
+        &quot;butter&quot;,
+        &quot;marmalade&quot;
+      ]
+    }
+}).render();</code></pre>
+<h4 id="-result-http-bagel-framework-github-io-butter-js-examples-views-simple-html-"><a href="http://bagel-framework.github.io/Butter.js/examples/views/simple.html">Result</a></h4>
+<h3 id="other-live-examples">Other Live Examples</h3>
+<ul>
+<li><a href="http://bagel-framework.github.io/Butter.js/examples/views/ball.html">css binding</a></li>
+<li><a href="http://bagel-framework.github.io/Butter.js/examples/views/list.html">dynamic list</a></li>
+<li><a href="http://bagel-framework.github.io/Butter.js/examples/views/subviews.html">subviews injection</a></li>
+</ul>
+<h3 id="methods">Methods</h3>
+<h2 id="butter-data">Butter.Data</h2>
+<h3 id="methods">Methods</h3>
+<h2 id="butter-router">Butter.Router</h2>
+<h3 id="other-live-examples">Other Live Examples</h3>
+<ul>
+<li><a href="http://bagel-framework.github.io/Butter.js/examples/router/html5/">html5 push navigation</a></li>
+<li><a href="http://bagel-framework.github.io/Butter.js/examples/router/hashbangs/">hashbangs</a></li>
+</ul>
+<h3 id="methods">Methods</h3>
+<h1 id="what-is-the-functional-reactive-programming-">What is the Functional Reactive Programming?!</h1>
+<p>If you don&#39;t know what it is the &quot;Functional Reactive Programming&quot; paradigm please check the following video first:</p>
+<p><a href="https://www.youtube.com/watch?v=ZOCCzDNsAtI"><img src="http://img.youtube.com/vi/ZOCCzDNsAtI/hqdefault.jpg" alt="An Introduction to Functional Reactive Programming"></a></p>
 
 
     <footer>
@@ -63,7 +112,7 @@
   </div>
 
   <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
-  <script src="assets/dist/Butter.js"></script>
+  <script src="assets/dist/butter.js"></script>
   <script>hljs.initHighlightingOnLoad();</script>
 
 </body>

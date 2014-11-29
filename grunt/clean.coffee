@@ -3,9 +3,14 @@
 module.exports =
   build:
     src: ['dist']
-  '_gh-pages':
-    src: ['.grunt']
-  'doc':
+  'pages':
+    src: [
+      '.grunt'
+      '_gh-pages/node_modules'
+      '_gh-pages/dist'
+      '_gh-pages/examples'
+    ]
+  doc:
     src: [
       'docs'
     ]

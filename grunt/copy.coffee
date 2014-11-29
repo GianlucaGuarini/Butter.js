@@ -6,7 +6,10 @@ module.exports =
         expand: true
         src:[
           'dist/**'
+          'examples/**',
+          'node_modules/jquery/**'
+          'node_modules/baconjs/**'
         ]
-        dest: '_gh-pages/assets/'
+        dest: '_gh-pages/'
       }
     ]
