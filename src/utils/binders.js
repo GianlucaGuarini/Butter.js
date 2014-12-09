@@ -30,14 +30,7 @@ define(function(require, exports, module) {
         dataPath = pathSplit[0],
         placeholderPath = pathSplit[1],
         $parent = $el.parent(),
-        // remove the binderSelector, we don't need it anymore
-        $template = $el.clone().removeAttr(Butter.defaults.view.binderSelector + 'each');
-
-      $el.remove();
-
-      return {
-        deferred: true,
-        addSubview: function(attributes, i) {
+        addSubview = function(attributes, i) {
           var $newEl = $template.clone(),
             newView;
 
@@ -54,13 +47,17 @@ define(function(require, exports, module) {
 
           return newView;
         },
-        get: function() {
+        // remove the binderSelector, we don't need it anymore
+        $template = $el.clone().removeAttr(Butter.defaults.view.binderSelector + 'each');
 
-        },
+      $el.remove();
+
+      return {
+        deferred: true,
         set: function() {
           var html = [];
           _.each(data.get(dataPath), function() {
-            html.push(this.addSubview.apply(this, arguments).$el);
+            html.push(addSubview.apply(this, arguments).$el);
           }, this);
 
           // detect the new views to append
@@ -84,7 +81,7 @@ define(function(require, exports, module) {
               html = [];
               while (itemsCount++ < 0) {
                 var i = values.length + itemsCount - 1;
-                html.push(this.addSubview(values[i], i).$el);
+                html.push(addSubview(values[i], i).$el);
               }
               $parent.append(html);
             }
@@ -92,7 +89,6 @@ define(function(require, exports, module) {
         },
         bind: function() {
           this.set();
-          this.get();
         },
         unbind: function() {
           _.each(subviews, function(subview) {

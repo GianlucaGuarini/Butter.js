@@ -59,14 +59,6 @@ new Butter.View({
 
 ### Methods
 
-## Butter.Router
-
-### Other Live Examples
-
-- [html5 push navigation](http://bagel-framework.github.io/Butter.js/examples/router/html5/)
-- [hashbangs](http://bagel-framework.github.io/Butter.js/examples/router/hashbangs/)
-
-### Methods
 
 # What is the Functional Reactive Programming?!
 If you don't know what it is the "Functional Reactive Programming" paradigm please check the following video first:
@@ -83,7 +75,7 @@ If you don't know what it is the "Functional Reactive Programming" paradigm plea
 [gemnasium-image]: https://img.shields.io/gemnasium/bagel-framework/Butter.js.svg?style=flat-square
 [gemnasium-url]: https://gemnasium.com/bagel-framework/Butter.js
 
-[travis-url]:https://travis-ci.org/bagel-framework/Butter.js.svg?branch=master
+[travis-url]:https://travis-ci.org/bagel-framework/Butter.js
 [travis-image]: https://img.shields.io/travis/bagel-framework/Butter.js.svg?style=flat-square
 
 [saucelabs-image]:https://saucelabs.com/browser-matrix/butter.svg

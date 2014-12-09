@@ -90,7 +90,7 @@
         },
       }),
         i = 0,
-        ITEMS_COUNT = 10,
+        ITEMS_COUNT = 500,
         values = [];
 
       while (i++ < ITEMS_COUNT) {
@@ -102,7 +102,10 @@
 
       view.data.set('values',values);
 
-      view.render();
+
+      view.bind();
+
+      //view.render();
 
       //console.timeEnd("DOM update");
 

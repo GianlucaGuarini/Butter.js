@@ -1,6 +1,6 @@
 {
   "name": "butter",
-  "version": "0.0.1-alpha.11",
+  "version": "0.0.1-alpha.12",
   "description": "The reactive programming framework that will make your code tastier",
   "main": "index.js",
   "scripts": {
@@ -17,7 +17,7 @@
     "grunt": "*",
     "grunt-contrib-clean": "*",
     "grunt-contrib-compass": "*",
-    "grunt-contrib-connect": "^0.8.0",
+    "grunt-contrib-connect": "^0.9.0",
     "grunt-contrib-copy": "*",
     "grunt-contrib-jshint": "*",
     "grunt-contrib-requirejs": "^0.4.4",
@@ -38,7 +38,7 @@
     "mocha": "*",
     "requirejs": "^2.1.15",
     "simulant": "*",
-    "sinon": "1.10.3",
+    "sinon": "^1.12.1",
     "sinon-expect": "0.2.0"
   },
   "author": "Gianluca Guarini (http://gianlucaguarini.com/)",
@@ -54,7 +54,7 @@
   },
   "homepage": "https://github.com/bagel-framework/Butter.js",
   "dependencies": {
-    "baconjs": "^0.7.37",
+    "baconjs": "^0.7.38",
     "jquery": "^1.11.1"
   },
   "repository": {
