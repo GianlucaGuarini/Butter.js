@@ -26,10 +26,13 @@ define(function(require, exports, module) {
      * Remove all the class properties
      */
     removeProperties: function() {
+
+      var self = this;
+
       _.each(this, function(i, property) {
-        this[property] = null;
-        delete this[property];
-      }, this);
+        self[property] = null;
+        delete self[property];
+      });
     }
   };
 });

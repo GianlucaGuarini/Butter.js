@@ -30,15 +30,15 @@ define(function(require) {
     });
 
     it('getObjectValueByPath', function() {
-      expect(_.getObjectValueByPath(cake, 'ingredients.meal')).to.be.equal('00');
-      expect(_.getObjectValueByPath(cakes, '[300].ingredients.meal')).to.be.equal('00');
+      expect(_.getObjectValueByPath(cake, 'ingredients.meal')).to.equal('00');
+      expect(_.getObjectValueByPath(cakes, '[300].ingredients.meal')).to.equal('00');
     });
 
     it('setObjectValueByPath', function() {
       _.setObjectValueByPath(cake, 'ingredients.sugar', false);
       _.setObjectValueByPath(cakes, '[20].ingredients.sugar', null);
-      expect(cake.ingredients.sugar).to.be.equal(false);
-      expect(cakes[20].ingredients.sugar).to.be.equal(undefined);
+      expect(cake.ingredients.sugar).to.equal(false);
+      expect(cakes[20].ingredients.sugar).to.equal(undefined);
     });
 
     it('difference', function() {
@@ -70,16 +70,16 @@ define(function(require) {
           meal: '00',
           sugar: true
         }
-      })).to.be.equal(true);
+      })).to.equal(true);
 
-      expect(_.isEqual(_.difference(cake, cake2), false)).to.be.equal(true);
+      expect(_.isEqual(_.difference(cake, cake2), false)).to.equal(true);
 
-      expect(_.isEqual(_.difference(fruits, bread), ['mela', 'banana', 'pera'])).to.be.equal(true);
+      expect(_.isEqual(_.difference(fruits, bread), ['mela', 'banana', 'pera'])).to.equal(true);
 
       expect(_.isEqual(_.difference(bread, cake), {
         pizzas: ['margherita', 'quattrostagioni', 'calzone'],
         specialOffer: true
-      })).to.be.equal(true);
+      })).to.equal(true);
 
     });
     it('keys', function() {

@@ -55,37 +55,39 @@ define(function(require, exports, module) {
       return {
         deferred: true,
         set: function() {
-          var html = [];
+          var html = [],
+            onValue = function(values) {
+              var itemsCount = subviews.length - values.length;
+
+              if (!itemsCount) {
+                // nothing changed
+                return;
+              } else if (itemsCount > 0) {
+                // remove items
+                while (itemsCount--) {
+                  subviews[subviews.length - 1].remove();
+                  subviews.splice(subviews.length - 1, 1);
+                }
+              } else {
+                // add items
+                html = [];
+                while (itemsCount++ < 0) {
+                  var i = values.length + itemsCount - 1;
+                  html.push(addSubview(values[i], i).$el);
+                }
+                $parent.append(html);
+              }
+            };
+
           _.each(data.get(dataPath), function() {
             html.push(addSubview.apply(this, arguments).$el);
-          }, this);
+          });
 
           // detect the new views to append
           $parent.append(html);
           html = null;
 
-          data.listen(dataPath).debounce(50).onValue(_.bind(function(values) {
-            var itemsCount = subviews.length - values.length;
-
-            if (!itemsCount) {
-              // nothing changed
-              return;
-            } else if (itemsCount > 0) {
-              // remove items
-              while (itemsCount--) {
-                subviews[subviews.length - 1].remove();
-                subviews.splice(subviews.length - 1, 1);
-              }
-            } else {
-              // add items
-              html = [];
-              while (itemsCount++ < 0) {
-                var i = values.length + itemsCount - 1;
-                html.push(addSubview(values[i], i).$el);
-              }
-              $parent.append(html);
-            }
-          }, this));
+          data.listen(dataPath).onValue(onValue);
         },
         bind: function() {
           this.set();
@@ -138,7 +140,7 @@ define(function(require, exports, module) {
               }
             }
           };
-          listener = data.listen(path).debounce(50).onValue(onChange);
+          listener = data.listen(path).onValue(onChange);
           onChange(data.get(path));
         },
         bind: function() {
@@ -172,7 +174,7 @@ define(function(require, exports, module) {
               $el[inverse ? 'show' : 'hide']();
             }
           };
-          listener = data.listen(path).debounce(50).onValue(onChange);
+          listener = data.listen(path).onValue(onChange);
           onChange(data.get(path));
         },
         bind: function() {
@@ -232,7 +234,6 @@ define(function(require, exports, module) {
         set: function() {
           listener = data
             .listen(path)
-            .debounce(50)
             .startWith(data.get(path))
             .onValue($el, 'text');
         },
@@ -257,7 +258,6 @@ define(function(require, exports, module) {
             events.map(function() {
               return $el.val();
             })
-            .debounce(50)
             .assign(data, 'set', path)
           );
         },

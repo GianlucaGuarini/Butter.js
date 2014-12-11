@@ -130,20 +130,22 @@ define(function(require, exports, module) {
      */
     insertSubviews: function(subviews) {
 
+      var self = this;
+
       _.each(subviews, function(subviewObj) {
 
         var selector = _.keys(subviewObj)[0],
           subview = subviewObj[selector];
 
         if (selector) {
-          this.setSubview(selector, subview);
+          self.setSubview(selector, subview);
         } else {
-          this.insertSubview(subview);
+          self.insertSubview(subview);
         }
 
         subview.render();
 
-      }, this);
+      });
 
       return this;
     },
@@ -178,15 +180,18 @@ define(function(require, exports, module) {
      * @public
      */
     unbind: function() {
+
+      var self = this;
+
       this.$el.off();
 
       // End the events streams
       _.each(this.events, function(i, event) {
         if (this[event.name]) {
-          this[event.name].onValue()();
-          this[event.name] = null;
+          self[event.name].onValue()();
+          self[event.name] = null;
         }
-      }, this);
+      });
 
       // End the callbacks stream
       _.each(this.callbacks, function(callback) {
@@ -200,7 +205,7 @@ define(function(require, exports, module) {
       // Kill all the data bindings
       _.each(this.binders, function(binder) {
         binder();
-      }, this);
+      });
 
       this.binders = [];
 
@@ -276,16 +281,16 @@ define(function(require, exports, module) {
       // Set the DOM binders parsing the view html
       _.each(_binders, function(binderType) {
 
-        var selector = this.binderSelector + binderType;
+        var selector = self.binderSelector + binderType;
 
-        this.$('[' + selector + ']').each(function() {
-          initBinder($(this), selector, binderType);
+        self.$('[' + selector + ']').each(function(i,el) {
+          initBinder($(el), selector, binderType);
         });
 
         // Check also the view el binders
-        initBinder(this.$el, selector, binderType);
+        initBinder(self.$el, selector, binderType);
 
-      }, this);
+      });
 
       _.each(defeferredBinders, function(binder) {
         binder.bind();
@@ -294,14 +299,14 @@ define(function(require, exports, module) {
       // Bind the view events
       _.each(this.events, function(event, i) {
         if (event.name) {
-          this[event.name] = this.$el.asEventStream(event.type, event.el);
-          if (this.methods[event.name] && _.isFunction(this.methods[event.name])) {
-            this.callbacks.push(this[event.name].onValue(_.bind(this.methods[event.name], this)));
+          self[event.name] = self.$el.asEventStream(event.type, event.el);
+          if (self.methods[event.name] && _.isFunction(self.methods[event.name])) {
+            self.callbacks.push(self[event.name].onValue(_.bind(self.methods[event.name], self)));
           }
         } else {
           throw new Error('You must specify an event name for each event assigned to this view');
         }
-      }, this);
+      });
 
       return this;
     },
@@ -321,7 +326,7 @@ define(function(require, exports, module) {
 
       _.each(this.subviews, function(subview) {
         subview.remove();
-      }, this);
+      });
 
       if (this.$el) {
         this.$el.remove();

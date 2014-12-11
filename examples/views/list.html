@@ -35,9 +35,6 @@
     </ul>
     <button class="add">Add item</button>
     <button class="remove">Remove Item</button>
-    <textarea>
-
-    </textarea>
   </div>
 
   <!-- Vendor -->
@@ -64,14 +61,6 @@
           name: 'onTextareaChange',
           el: 'textarea'
         }],
-        data: {},
-        afterRender: function () {
-          var self = this;
-
-          this.data.changes.debounce(3000).onValue(function(val){
-            this.$('textarea').val(self.data.toString());
-          });
-        },
         methods: {
           onRemoveItem: function () {
             this.data.remove(
@@ -83,14 +72,11 @@
             this.data.add({
                 name: 'name' + (this.data.get('values').length + 1)
             },'values');
-          },
-          onTextareaChange: function (e) {
-            this.data.set(JSON.parse($(e.currentTarget).val()));
           }
         },
       }),
         i = 0,
-        ITEMS_COUNT = 500,
+        ITEMS_COUNT = 50,
         values = [];
 
       while (i++ < ITEMS_COUNT) {

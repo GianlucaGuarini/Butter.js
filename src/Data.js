@@ -388,18 +388,20 @@ define(function(require, exports, module) {
     bind: function(destination, sourcePath, destinationPath, doubleWay) {
 
       var self = this,
-        _doubleWay = _.isUndefined(doubleWay) ? true : doubleWay;
+        _doubleWay = _.isUndefined(doubleWay) ? true : doubleWay,
+        onDestionationValue = function(value) {
+           destination.set.apply(destination, destinationPath ? [destinationPath, value] : [value]);
+         },
+         onSourceValue = function(value) {
+           self.set.apply(self, sourcePath ? [sourcePath, value] : [value]);
+         };
 
       // Bind this class also to the source
       if (_doubleWay) {
-        destination.listen(destinationPath).onValue(function(value) {
-          self.set.apply(self, sourcePath ? [sourcePath, value] : [value]);
-        });
+        destination.listen(destinationPath).onValue(onSourceValue);
       }
 
-      this.listen(sourcePath).onValue(function(value) {
-        destination.set.apply(destination, destinationPath ? [destinationPath, value] : [value]);
-      });
+      this.listen(sourcePath).onValue(onDestionationValue);
 
       return this;
 

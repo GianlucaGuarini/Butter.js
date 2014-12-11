@@ -1,6 +1,6 @@
 /**
  * Butter.js
- * Version: 0.0.1-alpha.12
+ * Version: 0.0.1-alpha.13
  * Author: Gianluca Guarini
  * Contact: gianluca.guarini@gmail.com
  * Website: http://www.gianlucaguarini.com/
@@ -68,7 +68,7 @@
     root.Butter = factory(Bacon, jQuery);
   }
 }(this, function(Bacon, $) {
-  var utils_helpers, utils_defaults, utils_mixins, utils_binders, utils_history, Butter, _Data_, _View_, _Router_, exports;
+  var utils_helpers, utils_defaults, utils_mixins, utils_binders, Butter, _Data_, _View_, exports;
   utils_helpers = exports = function(exports) {
 
     var _toString = Object.prototype.toString,
@@ -185,33 +185,21 @@
           }
         }
       },
-      each: function(iterator, callback, context) {
+      each: function(iterator, callback) {
         var self = this,
           isObject = _.isObject(iterator);
-        context = context || callback.prototype;
         if (!iterator)
           return;
         if (_each && _keys) {
           if (isObject) {
             _each.call(_keys(iterator), function(key) {
-              callback.apply(context, [
-                key,
-                iterator[key]
-              ]);
+              callback(key, iterator[key]);
             });
           } else {
-            _each.call(iterator, _.bind(callback, context));
+            _each.call(iterator, callback);
           }
         } else {
-          $.each(iterator, function(i, element) {
-            callback.apply(context, isObject ? [
-              i,
-              element
-            ] : [
-              element,
-              i
-            ]);
-          });
+          $.each(iterator, callback);
         }
       },
       keys: _keys || function(obj) {
@@ -292,10 +280,11 @@
         }
       },
       removeProperties: function() {
+        var self = this;
         _.each(this, function(i, property) {
-          this[property] = null;
-          delete this[property];
-        }, this);
+          self[property] = null;
+          delete self[property];
+        });
       }
     };
     return exports;
@@ -337,30 +326,31 @@
         return {
           deferred: true,
           set: function() {
-            var html = [];
+            var html = [],
+              onValue = function(values) {
+                var itemsCount = subviews.length - values.length;
+                if (!itemsCount) {
+                  return;
+                } else if (itemsCount > 0) {
+                  while (itemsCount--) {
+                    subviews[subviews.length - 1].remove();
+                    subviews.splice(subviews.length - 1, 1);
+                  }
+                } else {
+                  html = [];
+                  while (itemsCount++ < 0) {
+                    var i = values.length + itemsCount - 1;
+                    html.push(addSubview(values[i], i).$el);
+                  }
+                  $parent.append(html);
+                }
+              };
             _.each(data.get(dataPath), function() {
               html.push(addSubview.apply(this, arguments).$el);
-            }, this);
+            });
             $parent.append(html);
             html = null;
-            data.listen(dataPath).debounce(50).onValue(_.bind(function(values) {
-              var itemsCount = subviews.length - values.length;
-              if (!itemsCount) {
-                return;
-              } else if (itemsCount > 0) {
-                while (itemsCount--) {
-                  subviews[subviews.length - 1].remove();
-                  subviews.splice(subviews.length - 1, 1);
-                }
-              } else {
-                html = [];
-                while (itemsCount++ < 0) {
-                  var i = values.length + itemsCount - 1;
-                  html.push(addSubview(values[i], i).$el);
-                }
-                $parent.append(html);
-              }
-            }, this));
+            data.listen(dataPath).onValue(onValue);
           },
           bind: function() {
             this.set();
@@ -408,7 +398,7 @@
                 }
               }
             };
-            listener = data.listen(path).debounce(50).onValue(onChange);
+            listener = data.listen(path).onValue(onChange);
             onChange(data.get(path));
           },
           bind: function() {
@@ -434,7 +424,7 @@
                 $el[inverse ? 'show' : 'hide']();
               }
             };
-            listener = data.listen(path).debounce(50).onValue(onChange);
+            listener = data.listen(path).onValue(onChange);
             onChange(data.get(path));
           },
           bind: function() {
@@ -470,7 +460,7 @@
         var listener;
         return {
           set: function() {
-            listener = data.listen(path).debounce(50).startWith(data.get(path)).onValue($el, 'text');
+            listener = data.listen(path).startWith(data.get(path)).onValue($el, 'text');
           },
           bind: function() {
             this.set();
@@ -487,7 +477,7 @@
           get: function() {
             listeners.push(events.map(function() {
               return $el.val();
-            }).debounce(50).assign(data, 'set', path));
+            }).assign(data, 'set', path));
           },
           set: function() {
             listeners.push(data.listen(path).startWith(data.get(path)).assign($el, 'val'));
@@ -502,360 +492,6 @@
         };
       }
     };
-    return exports;
-  }({});
-  utils_history = function(exports) {
-    var PATH_REGEXP = new RegExp([
-      '(\\\\.)',
-      '([\\/.])?(?:\\:(\\w+)(?:\\(((?:\\\\.|[^)])*)\\))?|\\(((?:\\\\.|[^)])*)\\))([+*?])?',
-      '([.+*?=^!:${}()[\\]|\\/])'
-    ].join('|'), 'g');
-
-    function escapeGroup(group) {
-      return group.replace(/([=!:$\/()])/g, '\\$1');
-    }
-    var attachKeys = function(re, keys) {
-      re.keys = keys;
-      return re;
-    };
-
-    function pathtoRegexp(path, keys, options) {
-      if (keys && !Array.isArray(keys)) {
-        options = keys;
-        keys = null;
-      }
-      keys = keys || [];
-      options = options || {};
-      var strict = options.strict;
-      var end = options.end !== false;
-      var flags = options.sensitive ? '' : 'i';
-      var index = 0;
-      if (path instanceof RegExp) {
-        var groups = path.source.match(/\((?!\?)/g) || [];
-        keys.push.apply(keys, groups.map(function(match, index) {
-          return {
-            name: index,
-            delimiter: null,
-            optional: false,
-            repeat: false
-          };
-        }));
-        return attachKeys(path, keys);
-      }
-      if (Array.isArray(path)) {
-        path = path.map(function(value) {
-          return pathtoRegexp(value, keys, options).source;
-        });
-        return attachKeys(new RegExp('(?:' + path.join('|') + ')', flags), keys);
-      }
-      path = path.replace(PATH_REGEXP, function(match, escaped, prefix, key, capture, group, suffix, escape) {
-        if (escaped) {
-          return escaped;
-        }
-        if (escape) {
-          return '\\' + escape;
-        }
-        var repeat = suffix === '+' || suffix === '*';
-        var optional = suffix === '?' || suffix === '*';
-        keys.push({
-          name: key || index++,
-          delimiter: prefix || '/',
-          optional: optional,
-          repeat: repeat
-        });
-        prefix = prefix ? '\\' + prefix : '';
-        capture = escapeGroup(capture || group || '[^' + (prefix || '\\/') + ']+?');
-        if (repeat) {
-          capture = capture + '(?:' + prefix + capture + ')*';
-        }
-        if (optional) {
-          return '(?:' + prefix + '(' + capture + '))?';
-        }
-        return prefix + '(' + capture + ')';
-      });
-      var endsWithSlash = path[path.length - 1] === '/';
-      if (!strict) {
-        path = (endsWithSlash ? path.slice(0, -2) : path) + '(?:\\/(?=$))?';
-      }
-      if (!end) {
-        path += strict && endsWithSlash ? '' : '(?=\\/|$)';
-      }
-      return attachKeys(new RegExp('^' + path + (end ? '$' : ''), flags), keys);
-    }
-    var location = window.history.location || window.location;
-    var dispatch = true;
-    var base = '';
-    var running;
-    var hashbang = false;
-    var prevContext;
-
-    function page(path, fn) {
-      if ('function' === typeof path) {
-        return page('*', path);
-      }
-      if ('function' === typeof fn) {
-        var route = new Route(path);
-        for (var i = 1; i < arguments.length; ++i) {
-          page.callbacks.push(route.middleware(arguments[i]));
-        }
-      } else if ('string' === typeof path) {
-        page['string' === typeof fn ? 'redirect' : 'show'](path, fn);
-      } else {
-        page.start(path);
-      }
-    }
-    page.callbacks = [];
-    page.exits = [];
-    page.current = '';
-    page.base = function(path) {
-      if (0 === arguments.length)
-        return base;
-      base = path;
-    };
-    page.start = function(options) {
-      options = options || {};
-      if (running)
-        return;
-      running = true;
-      if (false === options.dispatch)
-        dispatch = false;
-      if (false !== options.popstate)
-        window.addEventListener('popstate', onpopstate, false);
-      if (false !== options.click)
-        window.addEventListener('click', onclick, false);
-      if (true === options.hashbang)
-        hashbang = true;
-      if (!dispatch)
-        return;
-      var url = hashbang && ~location.hash.indexOf('#!') ? location.hash.substr(2) + location.search : location.pathname + location.search + location.hash;
-      page.replace(url, null, true, dispatch);
-    };
-    page.stop = function() {
-      page.current = '';
-      if (!running)
-        return;
-      running = false;
-      window.removeEventListener('click', onclick, false);
-      window.removeEventListener('popstate', onpopstate, false);
-    };
-    page.show = function(path, state, dispatch) {
-      page.current = path;
-      var ctx = new Context(path, state);
-      if (false !== dispatch)
-        page.dispatch(ctx);
-      if (false !== ctx.handled)
-        ctx.pushState();
-      return ctx;
-    };
-    page.redirect = function(from, to) {
-      if ('string' === typeof from && 'string' === typeof to) {
-        page(from, function(e) {
-          setTimeout(function() {
-            page.replace(to);
-          }, 0);
-        });
-      }
-      if ('string' === typeof from && 'undefined' === typeof to) {
-        setTimeout(function() {
-          page.replace(from);
-        }, 0);
-      }
-    };
-    page.replace = function(path, state, init, dispatch) {
-      page.current = path;
-      var ctx = new Context(path, state);
-      ctx.init = init;
-      ctx.save();
-      if (false !== dispatch)
-        page.dispatch(ctx);
-      return ctx;
-    };
-    page.dispatch = function(ctx) {
-      var prev = prevContext;
-      var i = 0;
-      var j = 0;
-      prevContext = ctx;
-
-      function nextExit() {
-        var fn = page.exits[j++];
-        if (!fn)
-          return nextEnter();
-        fn(prev, nextExit);
-      }
-
-      function nextEnter() {
-        var fn = page.callbacks[i++];
-        if (ctx.path !== page.current) {
-          ctx.handled = false;
-          return;
-        }
-        if (!fn)
-          return unhandled(ctx);
-        fn(ctx, nextEnter);
-      }
-      if (prev) {
-        nextExit();
-      } else {
-        nextEnter();
-      }
-    };
-
-    function unhandled(ctx) {
-      if (ctx.handled)
-        return;
-      var current;
-      if (hashbang) {
-        current = base + location.hash.replace('#!', '');
-      } else {
-        current = location.pathname + location.search;
-      }
-      if (current === ctx.canonicalPath)
-        return;
-      page.stop();
-      ctx.handled = false;
-      location.href = ctx.canonicalPath;
-    }
-    page.exit = function(path, fn) {
-      if (typeof path === 'function') {
-        return page.exit('*', path);
-      }
-      var route = new Route(path);
-      for (var i = 1; i < arguments.length; ++i) {
-        page.exits.push(route.middleware(arguments[i]));
-      }
-    };
-    page.reset = function() {
-      this.callbacks = [];
-      this.exits = [];
-    };
-
-    function decodeURLEncodedURIComponent(str) {
-      return decodeURIComponent(str.replace(/\+/g, ' '));
-    }
-
-    function Context(path, state) {
-      path = decodeURLEncodedURIComponent(path);
-      if ('/' === path[0] && 0 !== path.indexOf(base))
-        path = base + (hashbang ? '#!' : '') + path;
-      var i = path.indexOf('?');
-      this.canonicalPath = path;
-      this.path = path.replace(base, '') || '/';
-      if (hashbang)
-        this.path = this.path.replace('#!', '') || '/';
-      this.title = document.title;
-      this.state = state || {};
-      this.state.path = path;
-      this.querystring = ~i ? path.slice(i + 1) : '';
-      this.pathname = ~i ? path.slice(0, i) : path;
-      this.params = [];
-      this.hash = '';
-      if (!hashbang) {
-        if (!~this.path.indexOf('#'))
-          return;
-        var parts = this.path.split('#');
-        this.path = parts[0];
-        this.hash = parts[1] || '';
-        this.querystring = this.querystring.split('#')[0];
-      }
-    }
-    page.Context = Context;
-    Context.prototype.pushState = function() {
-      history.pushState(this.state, this.title, hashbang && this.path !== '/' ? '#!' + this.path : this.canonicalPath);
-    };
-    Context.prototype.save = function() {
-      history.replaceState(this.state, this.title, hashbang && this.path !== '/' ? '#!' + this.path : this.canonicalPath);
-    };
-
-    function Route(path, options) {
-      options = options || {};
-      this.path = path === '*' ? '(.*)' : path;
-      this.method = 'GET';
-      this.regexp = pathtoRegexp(this.path, this.keys = [], options.sensitive, options.strict);
-    }
-    page.Route = Route;
-    Route.prototype.middleware = function(fn) {
-      var self = this;
-      return function(ctx, next) {
-        if (self.match(ctx.path, ctx.params))
-          return fn(ctx, next);
-        next();
-      };
-    };
-    Route.prototype.match = function(path, params) {
-      var keys = this.keys,
-        qsIndex = path.indexOf('?'),
-        pathname = ~qsIndex ? path.slice(0, qsIndex) : path,
-        m = this.regexp.exec(decodeURIComponent(pathname));
-      if (!m)
-        return false;
-      for (var i = 1, len = m.length; i < len; ++i) {
-        var key = keys[i - 1];
-        var val = 'string' === typeof m[i] ? decodeURIComponent(m[i]) : m[i];
-        if (key) {
-          params[key.name] = undefined !== params[key.name] ? params[key.name] : val;
-        } else {
-          params.push(val);
-        }
-      }
-      return true;
-    };
-
-    function onpopstate(e) {
-      if (e.state) {
-        var path = e.state.path;
-        page.replace(path, e.state);
-      } else {
-        page.show(location.pathname + location.hash);
-      }
-    }
-
-    function onclick(e) {
-      if (1 !== which(e))
-        return;
-      if (e.metaKey || e.ctrlKey || e.shiftKey)
-        return;
-      if (e.defaultPrevented)
-        return;
-      var el = e.target;
-      while (el && 'A' !== el.nodeName)
-        el = el.parentNode;
-      if (!el || 'A' !== el.nodeName)
-        return;
-      if (el.getAttribute('download'))
-        return;
-      var link = el.getAttribute('href');
-      if (!hashbang && el.pathname === location.pathname && (el.hash || '#' === link))
-        return;
-      if (link && link.indexOf('mailto:') > -1)
-        return;
-      if (el.target)
-        return;
-      if (!sameOrigin(el.href))
-        return;
-      var path = el.pathname + el.search + (el.hash || '');
-      var orig = path;
-      path = path.replace(base, '');
-      if (hashbang)
-        path = path.replace('#!', '');
-      if (base && orig === path)
-        return;
-      e.preventDefault();
-      page.show(orig);
-    }
-
-    function which(e) {
-      e = e || window.event;
-      return null === e.which ? e.button : e.which;
-    }
-
-    function sameOrigin(href) {
-      var origin = location.protocol + '//' + location.hostname;
-      if (location.port)
-        origin += ':' + location.port;
-      return href && 0 === href.indexOf(origin);
-    }
-    page.sameOrigin = sameOrigin;
-    exports = page;
     return exports;
   }({});
   _Data_ = function(exports) {
@@ -1083,21 +719,23 @@
       },
       bind: function(destination, sourcePath, destinationPath, doubleWay) {
         var self = this,
-          _doubleWay = _.isUndefined(doubleWay) ? true : doubleWay;
-        if (_doubleWay) {
-          destination.listen(destinationPath).onValue(function(value) {
+          _doubleWay = _.isUndefined(doubleWay) ? true : doubleWay,
+          onDestionationValue = function(value) {
+            destination.set.apply(destination, destinationPath ? [
+              destinationPath,
+              value
+            ] : [value]);
+          },
+          onSourceValue = function(value) {
             self.set.apply(self, sourcePath ? [
               sourcePath,
               value
             ] : [value]);
-          });
+          };
+        if (_doubleWay) {
+          destination.listen(destinationPath).onValue(onSourceValue);
         }
-        this.listen(sourcePath).onValue(function(value) {
-          destination.set.apply(destination, destinationPath ? [
-            destinationPath,
-            value
-          ] : [value]);
-        });
+        this.listen(sourcePath).onValue(onDestionationValue);
         return this;
       },
       listen: function(path) {
@@ -1220,16 +858,17 @@
         return this;
       },
       insertSubviews: function(subviews) {
+        var self = this;
         _.each(subviews, function(subviewObj) {
           var selector = _.keys(subviewObj)[0],
             subview = subviewObj[selector];
           if (selector) {
-            this.setSubview(selector, subview);
+            self.setSubview(selector, subview);
           } else {
-            this.insertSubview(subview);
+            self.insertSubview(subview);
           }
           subview.render();
-        }, this);
+        });
         return this;
       },
       insertSubview: function(subview) {
@@ -1247,13 +886,14 @@
         return subview;
       },
       unbind: function() {
+        var self = this;
         this.$el.off();
         _.each(this.events, function(i, event) {
           if (this[event.name]) {
-            this[event.name].onValue()();
-            this[event.name] = null;
+            self[event.name].onValue()();
+            self[event.name] = null;
           }
-        }, this);
+        });
         _.each(this.callbacks, function(callback) {
           callback();
         });
@@ -1262,7 +902,7 @@
         });
         _.each(this.binders, function(binder) {
           binder();
-        }, this);
+        });
         this.binders = [];
         return this;
       },
@@ -1298,25 +938,25 @@
           subview.bind();
         });
         _.each(_binders, function(binderType) {
-          var selector = this.binderSelector + binderType;
-          this.$('[' + selector + ']').each(function() {
-            initBinder($(this), selector, binderType);
+          var selector = self.binderSelector + binderType;
+          self.$('[' + selector + ']').each(function(i, el) {
+            initBinder($(el), selector, binderType);
           });
-          initBinder(this.$el, selector, binderType);
-        }, this);
+          initBinder(self.$el, selector, binderType);
+        });
         _.each(defeferredBinders, function(binder) {
           binder.bind();
         });
         _.each(this.events, function(event, i) {
           if (event.name) {
-            this[event.name] = this.$el.asEventStream(event.type, event.el);
-            if (this.methods[event.name] && _.isFunction(this.methods[event.name])) {
-              this.callbacks.push(this[event.name].onValue(_.bind(this.methods[event.name], this)));
+            self[event.name] = self.$el.asEventStream(event.type, event.el);
+            if (self.methods[event.name] && _.isFunction(self.methods[event.name])) {
+              self.callbacks.push(self[event.name].onValue(_.bind(self.methods[event.name], self)));
             }
           } else {
             throw new Error('You must specify an event name for each event assigned to this view');
           }
-        }, this);
+        });
         return this;
       },
       remove: function() {
@@ -1328,7 +968,7 @@
         }
         _.each(this.subviews, function(subview) {
           subview.remove();
-        }, this);
+        });
         if (this.$el) {
           this.$el.remove();
         }
@@ -1338,37 +978,6 @@
     exports = View;
     return exports;
   }({});
-  _Router_ = function(exports) {
-
-    var _ = utils_helpers,
-      _binders = utils_binders,
-      _defaults = utils_defaults,
-      _mixins = utils_mixins,
-      _page = utils_history.exports,
-      Router = function(options) {
-        _.extend(this, _mixins);
-        console.log(_page);
-        _page(options);
-        return this;
-      };
-    Router.prototype = {
-      constructor: Router,
-      _routes: [],
-      history: _page,
-      map: function(url) {
-        var stream = new Bacon.Bus();
-        _page(url, function(ctx) {
-          stream.push(ctx);
-        });
-        this._routes.push(url);
-        return stream;
-      },
-      reset: function() {},
-      removeRoute: function(url) {}
-    };
-    exports = Router;
-    return exports;
-  }({});
   Butter = function(exports) {
 
     exports = {
@@ -1376,10 +985,8 @@
       defaults: utils_defaults,
       mixins: utils_mixins,
       binders: utils_binders,
-      history: utils_history,
       Data: _Data_,
       View: _View_,
-      Router: _Router_,
       create: {
         View: function(options) {
           return new Butter.View(options);
