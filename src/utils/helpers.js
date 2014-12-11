@@ -132,23 +132,28 @@ define(function(require, exports, module) {
         }
       }
     },
-    each: function(iterator, callback) {
+    each: function(iterator, callback, context) {
       var self = this,
-        isObject = _.isObject(iterator);
+        isObject = this.isObject(iterator);
+
+      context = context || callback.prototype;
 
       if (!iterator) return;
 
       if (_each && _keys) {
         if (isObject) {
-          _each.call(_keys(iterator), function(key){
-            callback(key,iterator[key]);
+          _each.call(_keys(iterator), function(key) {
+            callback.apply(context, [key, iterator[key]]);
           });
         } else {
-          _each.call(iterator, callback);
+          _each.call(iterator, this.bind(callback, context));
         }
       } else {
-        $.each(iterator, callback);
+        $.each(iterator, function(i, element) {
+          callback.apply(context, isObject ? [i, element] : [element, i]);
+        });
       }
+
     },
     keys: _keys || function(obj) {
       var keys = [];
