@@ -10,7 +10,7 @@ module.exports = (grunt, options) =>
       browsers: grunt.file.readJSON('test/saucelabs-browsers.json')
       build: process.env.TRAVIS_JOB_ID
       testname: options.pkg.name
-      throttled: 5
+      throttled: 2
       sauceConfig:
         'record-video': false
         'video-upload-on-pass': false
