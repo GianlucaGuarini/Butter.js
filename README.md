@@ -1,4 +1,4 @@
-### IPORTANT: Looking for a maintainer! 
+### IMPORTANT: Looking for a maintainer! 
 
 Butter.js was a work in progress project and it's not yet ready for any kind of project. While [I](https://github.com/GianlucaGuarini) was working on it I found that Baconjs has [big memory issues](https://github.com/baconjs/bacon.js/issues/446#issuecomment-66687574) that cannot be easily solved. Currently I am one of the [riotjs](https://github.com/muut/riotjs) developers and I will not maintain this project anymore.
 I will keep this up only to find someone else that wants to continue maintaining/enhancing it. Please write me if you are interested
